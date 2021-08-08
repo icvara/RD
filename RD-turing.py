@@ -284,13 +284,11 @@ def turinginstability(par):
     q=np.arange(0,100,0.2) 
 #    ss =findsteadystate(par,nstep)
     ss= findss(par)
-    print(ss)
     eigens=np.array([])
     for i,s in enumerate(ss): 
         A=jacobianMatrix(s[0],s[1],par)
         eigvals, eigvecs =eig(A)
         sse=eigvals.real
-        print(sse)
         if np.all(sse<0): #if all neg = stable point, test turing instability
             # add diffusion as in scholes et al.
             eigens=np.array([])
@@ -301,10 +299,11 @@ def turinginstability(par):
                 eigvals, eigvecs =eig(A)
                 eigens=np.append(eigens,eigvals.real)
                 if np.any(eigens>0):
+                    print("Tu instability")
                     turing_type=2
                     if eigens[-1]<0:
                         turing_type=1
-            print(eigens)
+
 
     return turing_type, eigens
 
@@ -336,26 +335,27 @@ def GeneratePars(parlist, ncpus,Npars=1000):
     print(f'>>>> Loop processing time: {end_time-start_time:.3f} sec on {ncpus} CPU cores.')    
 
     newparlist = [result[0] for result in results]
-    selectpars = [result[1] for result in results]
+    turingtype = [result[1] for result in results]
 
-    return(newparlist,selectpars)
+    return(newparlist,turingtype)
 
 
 def calculatePar(parlist, iter):
-  selectpar=[]
+  #selectpar=[]
+  turingtype=[]
   newpar=choosepar(parlist)    
   p=pars_to_dict(newpar,parlist)
   tu,e = turinginstability(p)
-  if tu >0:
-    selectpar.append(newpar)
-  return newpar,selectpar
+  #if tu >0:
+    #selectpar.append(newpar)
+  turingtype.append(tu)
+  return newpar,turingtype
 
 ####################################################
 
 
-par,selectpar=GeneratePars(parlist, ncpus=40,Npars=1000)
-#print(selectpar)
-#np.savetxt('selectpar.out', selectpar)
+par,tutype=GeneratePars(parlist, ncpus=40,Npars=1000)
+np.savetxt('turingtype.out', tutype)
 np.savetxt('par.out', par)
 '''
 par['K_RED']=20#2
