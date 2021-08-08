@@ -5,8 +5,13 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from numpy.linalg import eig
 import random
-from scipy.stats import norm, uniform, multivariate_normal
-
+#from scipy.stats import norm, uniform, multivariate_normal
+import multiprocessing
+import time
+from functools import partial
+from scipy import optimize
+from scipy.optimize import brentq
+import pandas as pd
 
 
 par={
@@ -42,7 +47,7 @@ parlist = [
     {'name' : 'n_ahl_green', 'lower_limit':0.5,'upper_limit':2.0},
     {'name' : 'alpha_green', 'lower_limit':0.0,'upper_limit':50.0},
     {'name' : 'beta_green', 'lower_limit':0.0,'upper_limit':100.0},
-    {'name' : 'delta_green', 'lower_limit':1.0,'upper_limit':1.0},
+ #   {'name' : 'delta_green', 'lower_limit':1.0,'upper_limit':1.0},
     {'name' : 'K_GREEN', 'lower_limit':0.0,'upper_limit':100.0},
     {'name' : 'n_GREEN', 'lower_limit':0.5,'upper_limit':2.0},
 
@@ -51,7 +56,7 @@ parlist = [
     {'name' : 'n_ahl_red', 'lower_limit':0.5,'upper_limit':2.0},
     {'name' : 'alpha_red', 'lower_limit':0.0,'upper_limit':50.0},
     {'name' : 'beta_red', 'lower_limit':0.0,'upper_limit':100.0},
-    {'name' : 'delta_red', 'lower_limit':1.0,'upper_limit':1.0},
+ #   {'name' : 'delta_red', 'lower_limit':1.0,'upper_limit':1.0},
     {'name' : 'K_RED', 'lower_limit':0.0,'upper_limit':100.0},
     {'name' : 'n_RED', 'lower_limit':0.5,'upper_limit':2.0},
 
@@ -59,11 +64,9 @@ parlist = [
     {'name' : 'K_ahl', 'lower_limit':0.0,'upper_limit':100.0},
     {'name' : 'n_ahl', 'lower_limit':0.5,'upper_limit':2.0},
     {'name' : 'beta_ahl', 'lower_limit':0.0,'upper_limit':100.0},
-    {'name' : 'delta_ahl', 'lower_limit':1.0,'upper_limit':1.0},
-    {'name' : 'D_ahl', 'lower_limit':0.01,'upper_limit':1.0},
+  #  {'name' : 'delta_ahl', 'lower_limit':1.0,'upper_limit':1.0},
+  #  {'name' : 'D_ahl', 'lower_limit':0.01,'upper_limit':1.0},
 ]
-
-
 
 
 
@@ -71,6 +74,25 @@ maxD= 1.1
 d = 0.1 #interval size
 d2 = d*d
 dt = d2 * d2 / (2 * maxD * (d2 + d2)) #interval time according to diffusion and interval dist
+
+def addfixedpar(par):
+    #list of fixed par
+    par['delta_red']=1
+    par['delta_green']=1
+    par['delta_ahl']=1
+    par['D_ahl']=1
+
+
+
+    return par
+
+def choosepar(parlist):
+    #choose random par in the defined range
+    samplepar=[]
+    for ipar,par in enumerate(parlist):
+        samplepar.append(random.uniform(par['lower_limit'], par['upper_limit']))
+   # p=pars_to_dict(samplepar,parlist)
+    return np.array(samplepar)
 
 
 def pars_to_dict(pars,parlist):
@@ -97,7 +119,10 @@ def diffusion(u0,d,D,oneD=False):
     return u
 
 
+
 def model(GREENi,REDi,AHLi,d,density,par, isdiffusion=True,oneD =False):
+    par=addfixedpar(par)
+    
     if isdiffusion:
         GREEN = par['alpha_green']+((par['beta_green']-par['alpha_green'])*np.power(AHLi*par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*par['K_ahl_green'],par['n_ahl_green']))
         GREEN = GREEN / (1 + np.power(REDi*par['K_RED'],par['n_RED']))
@@ -126,10 +151,27 @@ def model(GREENi,REDi,AHLi,d,density,par, isdiffusion=True,oneD =False):
     return GREEN,RED, AHL
 
 
-def Integration(GREEN0,RED0,AHL0,density,par,totaltime,dt,d=0.1,oneD =False, dimensionless=False,isdiffusion=True):
-    
+def solvedfunction(Gi,par):
+    #rewrite the system equation to have only one unknow and to be call with scipy.optimze.brentq
+    #the output give a function where when the line reach 0 are a steady states
 
-    
+    A= (par['beta_ahl']*np.power(Gi*par['K_ahl'],par['n_ahl']))/(1+np.power(Gi*par['K_ahl'],par['n_ahl']))
+    A= A/par['delta_ahl']
+
+    R = par['alpha_red']+((par['beta_red']-par['alpha_red'])*np.power(A*par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*par['K_ahl_red'],par['n_ahl_red']))
+    R = R / (1 + np.power(Gi*par['K_GREEN'],par['n_GREEN']))
+    R = R/ par['delta_red']
+
+    G = par['alpha_green']+((par['beta_green']-par['alpha_green'])*np.power(A*par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*par['K_ahl_green'],par['n_ahl_green']))
+    G = G / (1 + np.power(R*par['K_RED'],par['n_RED']))
+    G = G / par['delta_green']
+
+    func = G - Gi
+
+    return func
+
+
+def Integration(GREEN0,RED0,AHL0,density,par,totaltime,dt,d=0.1,oneD =False, dimensionless=False,isdiffusion=True):   
     t=0
     i=0
     
@@ -200,74 +242,63 @@ def jacobianMatrix(G,R,A,par):
     dAdr = 0
     dAda = -par['delta_ahl']
 
-    # add diffusion as in scholes et al.
-   # dAda = dAda - (q**2)*par['D_ahl']
+
     A = np.array([[dGdg,dGdr,dGda],[dRdg,dRdr,dRda],[dAdg,dAdr,dAda]])
     
     return A
 
 
+def findss(par):
+    #list of fixed par
+    par=addfixedpar(par)    
+    #function to find steady state
+    #1. find where line reached 0
+    Gi=np.arange(0,100,1)
 
-def findsteadystate(par,nstep=10.0,tt=1000,dt=0.1):
-    #select some point to cover the phase portrait
-    den=1
-    G= np.arange(0,par['beta_green'],par['beta_green']/nstep)
-    R= np.arange(0,par['beta_red'],par['beta_red']/nstep)
-    A= np.arange(0,par['beta_ahl'],par['beta_ahl']/nstep)
+    f=solvedfunction(Gi,par)
+    x=f[1:-1]*f[0:-2] #when the output give <0, where is a change in sign, meaning 0 is crossed
+    index=np.where(x<0)
 
-    ss=np.zeros((len(G)*len(R)*len(A),3))
+    ss=[]
+    for i in index[0]:
+        G=brentq(solvedfunction, Gi[i], Gi[i+1],args=par) #find the value of AHL at 0
+        #now we have AHL we can find AHL2 ss
+        A= (par['beta_ahl']*np.power(G*par['K_ahl'],par['n_ahl']))/(1+np.power(G*par['K_ahl'],par['n_ahl']))
+        A= A/par['delta_ahl']
 
-    m=0
-    for i,g in enumerate(G):
-        for j,r in enumerate(R):
-            for k,a in enumerate(A):
+        R = par['alpha_red']+((par['beta_red']-par['alpha_red'])*np.power(A*par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*par['K_ahl_red'],par['n_ahl_red']))
+        R = R / (1 + np.power(G*par['K_GREEN'],par['n_GREEN']))
+        R = R/ par['delta_red']        
+        ss.append(np.array([G,R,A]))
 
-                gi,ri,ai= Integration(g,r,a,density=den,par=par,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=True,isdiffusion=False)
-                ss[m][0]=round(gi[-2],5)
-                ss[m][1]=round(ri[-2],5)
-                ss[m][2]=round(ai[-2],5)
-
-                m=m+1
-    
-    ss=np.unique(ss, axis=0)
-    print(ss)
-    final_ss=ss.copy()
-    index=[]
-    for i,s in enumerate(ss):   
-        if np.all(s>0.001):
-            index.append(i) #print message
-    final_ss=ss[index]
-    if len(final_ss)>1:
-        final_ss=[] #don't want to mess with multi stable state and oscillation now...
-        print("multiple steady point")
-    return final_ss
+    return ss
 
 
-
-def turinginstability(par,nstep=10):
+def turinginstability(par):
     #step one find steady stateS
     turing_type=0
-    q=np.arange(0,10,0.2) 
-    ss =findsteadystate(par,nstep)
+    q=np.arange(0,100,0.2) 
+#    ss =findsteadystate(par,nstep)
+    ss= findss(par)
     eigens=np.array([])
-    print(ss)
-    #jacobian matrix
-    for i,s in enumerate(ss): #there is only one SS possible for the moment
-        A=jacobianMatrix(s[0],s[1],s[2],par)
+    for i,s in enumerate(ss): 
+        A=jacobianMatrix(s[0],s[1],par)
         eigvals, eigvecs =eig(A)
         sse=eigvals.real
- 
-    # add diffusion as in scholes et al.    
-        eigens=np.array([])
-        for qi in q:
-            A=jacobianMatrix(s[0],s[1],s[2],par)
-            A[2][2] = A[2][2] - (qi**2)*par['D_ahl']
-            eigvals, eigvecs =eig(A)
-            eigens=np.append(eigens,eigvals.real)
-        if np.any(eigens>0) and np.all(sse<0):
-            turing_type=2
-            if eigens[-1]<0:
-                turing_type=1
+        if np.all(sse<0): #if all neg = stable point, test turing instability
+            # add diffusion as in scholes et al.
+            eigens=np.array([])
+            for qi in q:
+                A=jacobianMatrix(s[0],s[1],par)
+                A[0][0] = A[0][0] - (qi**2)*par['D_ahl']
+                A[1][1] = A[1][1] - (qi**2)*par['D_ahl2']
+                eigvals, eigvecs =eig(A)
+                eigens=np.append(eigens,eigvals.real)
+                if np.any(eigens>0):
+                    print("Tu instability")
+                    turing_type=2
+                    if eigens[-1]<0:
+                        turing_type=1
 
 
     return turing_type, eigens
@@ -281,210 +312,145 @@ def choosepar(parlist):
    # p=pars_to_dict(samplepar,parlist)
     return np.array(samplepar)
 
+def GeneratePars(parlist, ncpus,Npars=1000):
+    #@EO: to compare the 2 versions, set the seed
+    #np.random.seed(0)
 
-################################################3
-#GRAPH function
-################################################
+    ## Call to function GeneratePar in parallel until Npars points are accepted
+    trials = 0
+    start_time = time.time()
+    results = []
 
-def movieplot1d(g,r,a):    
-    fig, ax = plt.subplots()
-    line1, = ax.plot(r[-1][1],'r')
-    line2, = ax.plot(g[-1][1],'g')
-    line3, = ax.plot(a[-1][1],'b')
+    pool = multiprocessing.Pool(ncpus)
+    results = pool.map(func=partial(calculatePar, parlist),iterable=range(Npars), chunksize=10)
+    pool.close()
+    pool.join()    
+    end_time = time.time()
+    print(f'>>>> Loop processing time: {end_time-start_time:.3f} sec on {ncpus} CPU cores.')    
 
-    #ax.set_ylim([0,2.1])
-    def animate(i):
-        line1.set_ydata(r[i][1])  # update the data.
-        line2.set_ydata(g[i][1])  # update the data.
-        line3.set_ydata(a[i][1])
-        return line1,line2,
+    newparlist = [result[0] for result in results]
+    turingtype = [result[1] for result in results]
 
-    ani = animation.FuncAnimation(
-        fig, animate, interval=0, blit=True, frames=round(tt/dt), save_count=50)
-
-    # To save the animation, use e.g.
-    #
-    # ani.save("movie.mp4")
-    #
-    # or
-    #
-    # writer = animation.FFMpegWriter(
-    #     fps=15, metadata=dict(artist='Me'), bitrate=1800)
-    # ani.save("movie.mp4", writer=writer)
-
-    plt.show()
-
-def plot1d(g,r,a,t):
-    fig, ax = plt.subplots()
-    line1, = ax.plot(r[t][1],'r')
-    line2, = ax.plot(g[t][1],'g')
-    line2, = ax.plot(a[t][1],'b')
-
-   # ax.set_ylim([0,2.1])
-    plt.show()
-    
-def plottime(g,r,a,pos):    
-    fig, ax = plt.subplots()
-    if pos == 0:
-        line1, = ax.plot(r[:],'r')
-        line2, = ax.plot(g[:],'g')
-        line3, = ax.plot(a[:],'b')
-    else:
-        line1, = ax.plot(r[:,pos[0],pos[1]],'r') #might bug didn't test
-        line2, = ax.plot(g[:,pos[0],pos[1]],'g')
-        line3, = ax.plot(a[:,pos[0],pos[1]],'b')
-
-   # ax.set_ylim([0,2.1])
-    plt.show()
-
-    
-##############################################################################
-
-#ss =findsteadystate(par,6)
-#s=ss[0]
-'''
-A=jacobianMatrix(100,100,100,par)
-tr=np.trace(A)
-det=np.linalg.det(A)
-print(A,tr,det)
-print(".------------.")
-tt=10
-tu,e = turinginstability(par,4)
-print(tu)
-gi,ri,ai= Integration(100,100,100,density=1,par=par,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=True,isdiffusion=False)
-'''
-print(".------.")
-#to be parallelized
-
-par=choosepar(parlist)
-for i in np.arange(0,1000):
-    newpar=choosepar(parlist)
-    par=np.vstack((par,newpar))
-    p=pars_to_dict(newpar,parlist)
-    tu,e = turinginstability(p,4)
-    print(tu,i)
+    return(newparlist,turingtype)
 
 
-for k in np.arange(0,len(parlist)):
-    plt.subplot(4,5,k+1)
-    plt.hist(par[:,k],bins=50)
-    plt.xlabel(parlist[k]['name'])
-plt.show()
+def calculatePar(parlist, iter):
+  #selectpar=[]
+  turingtype=[]
+  newpar=choosepar(parlist)    
+  p=pars_to_dict(newpar,parlist)
+  tu,e = turinginstability(p)
+  #if tu >0:
+    #selectpar.append(newpar)
+  turingtype.append(tu)
+  return newpar,turingtype
 
 
-'''
-plt.plot(gi,'g')
-plt.plot(ri,'r')
-plt.plot(ai,'--b')
-plt.ylim(0,105)
-plt.show()
+def load(name,parlist):
+    tutype= np.loadtxt(name+"_turingtype.out")
+    p= np.loadtxt(name+"_par.out")
 
-g,r,a = model(100,100,100,d,density=1,par=par,isdiffusion=False,oneD=True)    
-'''
+    namelist=[]
+    for i,par in enumerate(parlist):
+        namelist.append(parlist[i]['name'])
+    df = pd.DataFrame(p, columns = namelist)
+    df['tutype']=tutype
+    return df
 
-#0D
-'''
-# plate size & tie
-tt = 20 #totaltime
-w = h = 10 #10
-w= 0.3
-nx, ny = round(w/d), round(h/d)
-
-ss=findsteadystate()
-print(ss)
-'''
-
-'''
-q,eigens=turinginstability(par)
-plt.plot(q,eigens)
-plt.ylim(-10,10)
-plt.show()
-'''
+####################################################
 
 
-#1D
-'''
-tt = 100 #totaltime
-h = 10 #10
-w= 0.3
-nx, ny = round(w/d), round(h/d)
+def run(name):
+    par,tutype=GeneratePars(parlist, ncpus=40,Npars=1000)
+    np.savetxt(name+'_turingtype.out', tutype)
+    np.savetxt(name+'_par.out', par)
 
-#ss=findsteadystate()
-#s=ss[1]
-s=[100,100,100]
+
+def par_plot(name,df,parlist):
+
+    fonts=2
+    namelist=[]
+    for i,par in enumerate(parlist):
+        namelist.append(parlist[i]['name'])
+     
+    for i,par1 in enumerate(namelist):
+        for j,par2 in enumerate(namelist):
+            plt.subplot(len(namelist),len(namelist), i+j*len(namelist)+1)
+            if i == j :
+                plt.hist(df[par1])
+                plt.xlim((parlist[i]['lower_limit'],parlist[i]['upper_limit']))
+            else:
+                plt.scatter(df[par1],df[par2], c=df['tutype'], s=0.001, cmap='viridis')# vmin=mindist, vmax=maxdist)
+                plt.xlim((parlist[i]['lower_limit'],parlist[i]['upper_limit']))
+                plt.ylim((parlist[j]['lower_limit'],parlist[j]['upper_limit']))
+            if i > 0 and j < len(namelist)-1 :
+                plt.xticks([])
+                plt.yticks([])
+            else:
+                if i==0 and j!=len(namelist)-1:
+                    plt.xticks([])
+                    plt.ylabel(par2,fontsize=fonts)
+                    plt.yticks(fontsize=fonts,rotation=90)
+                if j==len(namelist)-1 and i != 0:
+                    plt.yticks([])
+                    plt.xlabel(par1,fontsize=fonts)
+                    plt.xticks(fontsize=fonts)
+                else:
+                    plt.ylabel(par2,fontsize=fonts)
+                    plt.xlabel(par1,fontsize=fonts)
+                    plt.xticks(fontsize=fonts)
+                    plt.yticks(fontsize=4,rotation=90)
+            
+      
+    plt.savefig(name+'_full_par_plot.pdf', bbox_inches='tight')
+    plt.close()
 
 
 
-density=np.ones((nx, ny))
-green = np.ones((nx, ny))*0
-red = np.ones((nx, ny))*0
-ahl = np.ones((nx, ny))*0
+def niceplot(name):
+    df=load(name,parlist)
+    par_plot(name,df,parlist)
 
 
-
-green[1,round(5/d)]=s[0]
-red[1,round(5/d)]=s[1]
-ahl[1,round(5/d)]=s[2]
-
-#for j in np.arange(1,ny-1):
-#            AHL[1][j]=AHL[1][j]+random.randint(0,1)/2
-
-'''
+    turingpar=[]
+    tu_df = df[df['tutype']>0]
+    nrow=tu_df.shape[0]
 
 
-'''
-g,r,a= Integration(green*0,red,ahl,density,par,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=False)
-g2,r2,a2= Integration(green,red*0,ahl,density,par,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=False)
+    tt = 100 #totaltime
+    h = 10 #10
+    w= 0.3
+    nx, ny = round(w/d), round(h/d)
+    density=np.ones((nx, ny))
+    AHL = np.ones((nx, ny))*0.2
+    AHL2 = np.ones((nx, ny))*0.2
+    #AHL[1,round(5/d)]=5
+    #AHL2[1,round(5/d)]=5
+    for i in np.arange(1,ny-1):
+                AHL[1][i]=AHL[1][i]*random.randint(0,10)/10
+                AHL2[1][i]=AHL2[1][i]*random.randint(0,10)/10
 
-plt.plot(g[-2][1][1:-2],'-g')
-plt.plot(r[-2][1][1:-2],'-r')
-plt.plot(a[-2][1][1:-2],'-b')
-plt.plot(g2[-2][1][1:-2],'--g')
-plt.plot(r2[-2][1][1:-2],'--r')
-plt.plot(a2[-2][1][1:-2],'--b')
-
-plt.show()
-
-g,r,a= Integration(green*0,red,ahl,density,par,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
-g2,r2,a2= Integration(green,red*0,ahl,density,par,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
-
-plt.plot(g[-2][1][1:-2],'-g')
-plt.plot(r[-2][1][1:-2],'-r')
-plt.plot(a[-2][1][1:-2],'-b')
-plt.plot(g2[-2][1][1:-2],'--g')
-plt.plot(r2[-2][1][1:-2],'--r')
-plt.plot(a2[-2][1][1:-2],'--b')
-
-plt.show()
-'''
-
-
-
-
-#2d plot
-'''
-
-tt = 100 #totaltime
-h= 8 #10
-w= 8
-nx, ny = round(w/d), round(h/d)
+    print(nrow)
+    for n in np.arange(0,nrow):
+        par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
+        p=pars_to_dict(par,parlist)
+        da, da2= Integration(AHL,AHL2,density,p,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
+       # plot1d(da,da2,0)
+        plt.subplot(round(np.sqrt(nrow)),round(np.sqrt(nrow)),n+1)
+        plt.plot(da[-2][1],'g')
+        plt.plot(da2[-2][1],'r')
+        plt.ylim(0,1)
+        print(n)
+        
+    plt.savefig(name+'_Tu_plot.pdf', bbox_inches='tight')
+    #plt.show()
 
 
-density=np.ones((nx, ny))
-AHL = np.ones((nx, ny))*0
-GREEN = np.ones((nx, ny))*0
-RED = np.ones((nx, ny))*0
-for j in np.arange(1,ny-1):
-    for i in np.arange(1,nx-1):
-            GREEN[i][j]=GREEN[i][j]+random.randint(0,1)*100
+####################################################################
+#main function
+####################################################################
 
-dg,dr,da= Integration(GREEN,RED,AHL,density,par,totaltime=tt,dt=dt,d=d,oneD=False, dimensionless=False,isdiffusion=True)
+name='TSRD_001'
+run(name)
+niceplot(name)
 
-plt.subplot(1,3,1)
-plt.imshow(dg[-2][:,:],cmap='Greens')#,vmin=0,vmax=0.5)
-plt.subplot(1,3,2)
-plt.imshow(dr[-2][:,:],cmap='Reds')#,vmin=0,vmax=0.5)
-plt.subplot(1,3,3)
-plt.imshow(da[-2][:,:],cmap='Blues')#,vmin=0,vmax=0.5)
-plt.show()
-'''

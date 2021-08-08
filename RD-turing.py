@@ -10,6 +10,7 @@ import time
 from functools import partial
 from scipy import optimize
 from scipy.optimize import brentq
+import pandas as pd
 
 par={
     
@@ -351,12 +352,130 @@ def calculatePar(parlist, iter):
   turingtype.append(tu)
   return newpar,turingtype
 
+
+def load(name,parlist):
+    tutype= np.loadtxt(name+"_turingtype.out")
+    p= np.loadtxt(name+"_par.out")
+
+    namelist=[]
+    for i,par in enumerate(parlist):
+        namelist.append(parlist[i]['name'])
+    df = pd.DataFrame(p, columns = namelist)
+    df['tutype']=tutype
+    return df
+
 ####################################################
 
 
-par,tutype=GeneratePars(parlist, ncpus=40,Npars=1000)
-np.savetxt('turingtype.out', tutype)
-np.savetxt('par.out', par)
+def run(name):
+    par,tutype=GeneratePars(parlist, ncpus=40,Npars=1000)
+    np.savetxt(name+'_turingtype.out', tutype)
+    np.savetxt(name+'_par.out', par)
+
+
+def par_plot(name,df,parlist):
+
+    fonts=2
+    namelist=[]
+    for i,par in enumerate(parlist):
+        namelist.append(parlist[i]['name'])
+     
+    for i,par1 in enumerate(namelist):
+        for j,par2 in enumerate(namelist):
+            plt.subplot(len(namelist),len(namelist), i+j*len(namelist)+1)
+            if i == j :
+                plt.hist(df[par1])
+                plt.xlim((parlist[i]['lower_limit'],parlist[i]['upper_limit']))
+            else:
+                plt.scatter(df[par1],df[par2], c=df['tutype'], s=0.001, cmap='viridis')# vmin=mindist, vmax=maxdist)
+                plt.xlim((parlist[i]['lower_limit'],parlist[i]['upper_limit']))
+                plt.ylim((parlist[j]['lower_limit'],parlist[j]['upper_limit']))
+            if i > 0 and j < len(namelist)-1 :
+                plt.xticks([])
+                plt.yticks([])
+            else:
+                if i==0 and j!=len(namelist)-1:
+                    plt.xticks([])
+                    plt.ylabel(par2,fontsize=fonts)
+                    plt.yticks(fontsize=fonts,rotation=90)
+                if j==len(namelist)-1 and i != 0:
+                    plt.yticks([])
+                    plt.xlabel(par1,fontsize=fonts)
+                    plt.xticks(fontsize=fonts)
+                else:
+                    plt.ylabel(par2,fontsize=fonts)
+                    plt.xlabel(par1,fontsize=fonts)
+                    plt.xticks(fontsize=fonts)
+                    plt.yticks(fontsize=4,rotation=90)
+            
+      
+    plt.savefig(name+'_full_par_plot.pdf', bbox_inches='tight')
+    plt.close()
+
+
+
+
+def niceplot(name):
+    df=load(name,parlist)
+    par_plot(name,df,parlist)
+
+
+    turingpar=[]
+    tu_df = df[df['tutype']>0]
+    nrow=tu_df.shape[0]
+
+
+    tt = 100 #totaltime
+    h = 10 #10
+    w= 0.3
+    nx, ny = round(w/d), round(h/d)
+    density=np.ones((nx, ny))
+    AHL = np.ones((nx, ny))*0.2
+    AHL2 = np.ones((nx, ny))*0.2
+    #AHL[1,round(5/d)]=5
+    #AHL2[1,round(5/d)]=5
+    for i in np.arange(1,ny-1):
+                AHL[1][i]=AHL[1][i]*random.randint(0,10)/10
+                AHL2[1][i]=AHL2[1][i]*random.randint(0,10)/10
+
+    print(nrow)
+    for n in np.arange(0,nrow):
+        par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
+        p=pars_to_dict(par,parlist)
+        da, da2= Integration(AHL,AHL2,density,p,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
+       # plot1d(da,da2,0)
+        plt.subplot(round(np.sqrt(nrow)),round(np.sqrt(nrow)),n+1)
+        plt.plot(da[-2][1],'g')
+        plt.plot(da2[-2][1],'r')
+        plt.ylim(0,1)
+        print(n)
+        
+    plt.savefig(name+'_Tu_plot.pdf', bbox_inches='tight')
+    #plt.show()
+
+
+
+
+name='test'
+#run(name)
+#niceplot(name)
+
+
+
+
+'''
+a, a2= Integration(AHL,AHL2,density,par,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=False)
+da, da2= Integration(AHL,AHL2,density,par,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
+plot1d(a,a2,-2)
+#movieplot1d(a,a2)
+plot1d(da,da2,0)
+plot1d(da,da2,-2)
+#movieplot1d(da,da2)
+#plottime(da,da2,pos=[1,round(5/d)])
+'''
+
+
+
 '''
 par['K_RED']=20#2
 par['beta_ahl2']=2
