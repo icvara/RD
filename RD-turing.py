@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import random
 import matplotlib.animation as animation
 from numpy.linalg import eig
-
+import multiprocessing
+import time
+from functools import partial
 
 par={
     
@@ -224,6 +226,7 @@ def findsteadystate(par,nstep=10.0,tt=1000,dt=0.1):
     final_ss=ss[index]
     if len(final_ss)>1:
         final_ss=[] #don't want to mess with multi stable state and oscillation now...
+        print("multistate")
     return final_ss
 
 
@@ -234,7 +237,7 @@ def turinginstability(par,nstep=10):
     q=np.arange(0,10,0.2) 
     ss =findsteadystate(par,nstep)
     eigens=np.array([])
-    print(ss)
+    #print(ss)
     #jacobian matrix
     for i,s in enumerate(ss): #there is only one SS possible for the moment
         A=jacobianMatrix(s[0],s[1],par)
@@ -273,8 +276,48 @@ def pars_to_dict(pars,parlist):
         dict_pars[par['name']] = pars[ipar] 
     return dict_pars
 
+
+def GeneratePars(parlist, ncpus,Npars=1000):
+    #@EO: to compare the 2 versions, set the seed
+    #np.random.seed(0)
+
+    ## Call to function GeneratePar in parallel until Npars points are accepted
+    trials = 0
+    start_time = time.time()
+    results = []
+
+    pool = multiprocessing.Pool(ncpus)
+    results = pool.map(func=partial(calculatePar, parlist),iterable=range(Npars), chunksize=10)
+    pool.close()
+    pool.join()    
+    end_time = time.time()
+    print(f'>>>> Loop processing time: {end_time-start_time:.3f} sec on {ncpus} CPU cores.')    
+
+    newparlist = [result[0] for result in results]
+    selectpars = [result[1] for result in results]
+
+    return(newparlist,selectpars)
+
+
+def calculatePar(parlist, iter):
+  selectpar=[]
+  newpar=choosepar(parlist)    
+  p=pars_to_dict(newpar,parlist)
+  tu,e = turinginstability(p,4)
+  if tu >0:
+    selectpar.append(newpar)
+  return newpar,selectpar
+
 ####################################################
 
+
+
+
+par,selectpar=GeneratePars(parlist, ncpus=40,Npars=1000)
+print(selectpar)
+np.savetxt('selectpar.out', selectpar)
+np.savetxt('par.out', par)
+'''
 par['K_RED']=20#2
 par['beta_ahl2']=2
 par['beta_ahl']=20
@@ -293,7 +336,7 @@ print(tu)
 
 selectpar=[]
 par=choosepar(parlist)
-for i in np.arange(0,5):
+for i in np.arange(0,10):
     newpar=choosepar(parlist)
     par=np.vstack((par,newpar))
     p=pars_to_dict(newpar,parlist)
@@ -306,9 +349,8 @@ for i in np.arange(0,5):
     print(tu,i)
 
 
-np.savetxt('selectpar.out', selectpar)
-np.savetxt('par.out', par)
 
+'''
 
 '''
 for k in np.arange(0,len(parlist)):
@@ -396,7 +438,7 @@ for par1 in [7,10,15,20]:
 plt.show()
 '''
 
-#'''
+'''
 #1D
 
 tt = 500 #totaltime
@@ -427,7 +469,7 @@ plot1d(da,da2,0)
 plot1d(da,da2,-2)
 #movieplot1d(da,da2)
 #plottime(da,da2,pos=[1,round(5/d)])
-#'''
+'''
 
 
 
