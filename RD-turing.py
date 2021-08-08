@@ -8,23 +8,25 @@ from numpy.linalg import eig
 import multiprocessing
 import time
 from functools import partial
+from scipy import optimize
+from scipy.optimize import brentq
 
 par={
     
-    'K_RED':2,#3.5,
+    'K_RED':94,#3.5,
     'n_RED':2.0,
 
-    'K_ahl':10,#35.0,#0.15,
+    'K_ahl':55,#35.0,#0.15,
     'n_ahl':2.0,
     
-    'beta_ahl':1.,
+    'beta_ahl':30.,
     'delta_ahl':1,#0.5,
     'D_ahl':0.01,
 
-    'K_ahl2':10,#35.0,#0.15,
+    'K_ahl2':27,#35.0,#0.15,
     'n_ahl2':2.0,
     
-    'beta_ahl2':1.00,
+    'beta_ahl2':2.80,
     
     'delta_ahl2':1,#0.5,
     'D_ahl2':0.01
@@ -201,8 +203,9 @@ def jacobianMatrix(AHL,AHL2,par):
     
     return A
 
-
+'''
 def findsteadystate(par,nstep=10.0,tt=1000,dt=0.1):
+    
     #select some point to cover the phase portrait
     step=par['beta_ahl']/nstep
     A= np.arange(0,par['beta_ahl'],step)
@@ -228,41 +231,80 @@ def findsteadystate(par,nstep=10.0,tt=1000,dt=0.1):
         final_ss=[] #don't want to mess with multi stable state and oscillation now...
         print("multistate")
     return final_ss
+'''
+
+def solvedfunction(AHLi,par):
+    #rewrite the system equation to have only one unknow and to be call with scipy.optimze.brentq
+    #the output give a function where when the line reach 0 are a steady states
+
+    AHL2ss = (par['beta_ahl2']*np.power(AHLi*par['K_ahl2'],par['n_ahl2']))/(1+np.power(AHLi*par['K_ahl2'],par['n_ahl2']))
+    AHL2ss = AHL2ss/par['delta_ahl2']
+    AHLss= (par['beta_ahl']*np.power(AHLi*par['K_ahl'],par['n_ahl']))/(1+np.power(AHLi*par['K_ahl'],par['n_ahl']))
+    AHLss = AHLss / (1 + np.power(AHL2ss*par['K_RED'],par['n_RED']))
+    AHLss = AHLss/par['delta_ahl']    
+    funAHL= AHLss - AHLi
+    return funAHL
 
 
-def turinginstability(par,nstep=10):
+
+def findss(par):
+    #list of fixed par
+    par['n_RED']=2
+    par['n_ahl']=2.0
+    par['n_ahl2']=2.0
+    par['delta_ahl']=1
+    par['delta_ahl2']=1
+    par['D_ahl']=0.01
+    par['D_ahl2']=1
+    
+    #function to find steady state
+
+    #1. find where line reached 0
+    AHLi=np.logspace(-5,2,200,base=10) # generate x axis with min and max of real biological value
+
+    f=solvedfunction(AHLi,par)
+    x=f[1:-1]*f[0:-2] #when the output give <0, where is a change in sign, meaning 0 is crossed
+    index=np.where(x<0)
+
+    ss=[]
+    for i in index[0]:
+
+        H=brentq(solvedfunction, AHLi[i], AHLi[i+1],args=par) #find the value of AHL at 0
+        #now we have AHL we can find AHL2 ss
+        H2=(par['beta_ahl2']*np.power(H*par['K_ahl2'],par['n_ahl2']))/(1+np.power(H*par['K_ahl2'],par['n_ahl2']))
+        H2=H2/par['delta_ahl2']
+        ss.append(np.array([H,H2]))
+
+    return ss
+
+
+def turinginstability(par):
     #step one find steady stateS
-    #turing=False
     turing_type=0
-    q=np.arange(0,10,0.2) 
-    ss =findsteadystate(par,nstep)
+    q=np.arange(0,100,0.2) 
+#    ss =findsteadystate(par,nstep)
+    ss= findss(par)
+    print(ss)
     eigens=np.array([])
-    #print(ss)
-    #jacobian matrix
-    for i,s in enumerate(ss): #there is only one SS possible for the moment
+    for i,s in enumerate(ss): 
         A=jacobianMatrix(s[0],s[1],par)
         eigvals, eigvecs =eig(A)
         sse=eigvals.real
- 
-    # add diffusion as in scholes et al.
-    
-       # print(s)
-       # print(sse)
-        eigens=np.array([])
-        for qi in q:
-            A=jacobianMatrix(s[0],s[1],par)
-            A[0][0] = A[0][0] - (qi**2)*par['D_ahl']
-            A[1][1] = A[1][1] - (qi**2)*par['D_ahl2']
-           # print(A[0][0] , A[1][1])
-            eigvals, eigvecs =eig(A)
-            eigens=np.append(eigens,eigvals.real)
-        #print(eigens)   
-        if np.any(eigens>0) and np.all(sse<0):
-            #turing=True
-            turing_type=2
-            if eigens[-1]<0:
-                turing_type=1
-
+        print(sse)
+        if np.all(sse<0): #if all neg = stable point, test turing instability
+            # add diffusion as in scholes et al.
+            eigens=np.array([])
+            for qi in q:
+                A=jacobianMatrix(s[0],s[1],par)
+                A[0][0] = A[0][0] - (qi**2)*par['D_ahl']
+                A[1][1] = A[1][1] - (qi**2)*par['D_ahl2']
+                eigvals, eigvecs =eig(A)
+                eigens=np.append(eigens,eigvals.real)
+                if np.any(eigens>0):
+                    turing_type=2
+                    if eigens[-1]<0:
+                        turing_type=1
+            print(eigens)
 
     return turing_type, eigens
 
@@ -303,7 +345,7 @@ def calculatePar(parlist, iter):
   selectpar=[]
   newpar=choosepar(parlist)    
   p=pars_to_dict(newpar,parlist)
-  tu,e = turinginstability(p,4)
+  tu,e = turinginstability(p)
   if tu >0:
     selectpar.append(newpar)
   return newpar,selectpar
@@ -311,11 +353,9 @@ def calculatePar(parlist, iter):
 ####################################################
 
 
-
-
 par,selectpar=GeneratePars(parlist, ncpus=40,Npars=1000)
-print(selectpar)
-np.savetxt('selectpar.out', selectpar)
+#print(selectpar)
+#np.savetxt('selectpar.out', selectpar)
 np.savetxt('par.out', par)
 '''
 par['K_RED']=20#2
