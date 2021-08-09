@@ -223,6 +223,9 @@ def jacobianMatrix(G,R,A,par):
     # [ DG/dg   DG/dr   DG/da ]
     # [ DR/dg   DR/dr   DR/da ]
     # [ DA/dg   DA/dr   DA/da ]
+    
+    par=addfixedpar(par)
+    
 
     #need to double check , some mistake are here
     dGdg = - par['delta_green']    
@@ -277,28 +280,28 @@ def findss(par):
 def turinginstability(par):
     #step one find steady stateS
     turing_type=0
-    q=np.arange(0,100,0.2) 
+    q=np.arange(0,100,0.1) 
 #    ss =findsteadystate(par,nstep)
     ss= findss(par)
     eigens=np.array([])
     for i,s in enumerate(ss): 
-        A=jacobianMatrix(s[0],s[1],par)
+        A=jacobianMatrix(s[0],s[1],s[2],par)
         eigvals, eigvecs =eig(A)
         sse=eigvals.real
         if np.all(sse<0): #if all neg = stable point, test turing instability
+           # print("stable")
             # add diffusion as in scholes et al.
             eigens=np.array([])
             for qi in q:
-                A=jacobianMatrix(s[0],s[1],par)
-                A[0][0] = A[0][0] - (qi**2)*par['D_ahl']
-                A[1][1] = A[1][1] - (qi**2)*par['D_ahl2']
+                A=jacobianMatrix(s[0],s[1],s[2],par)
+                A[2][2] = A[2][2] - (qi**2)*par['D_ahl']
                 eigvals, eigvecs =eig(A)
                 eigens=np.append(eigens,eigvals.real)
-                if np.any(eigens>0):
-                    print("Tu instability")
-                    turing_type=2
-                    if eigens[-1]<0:
-                        turing_type=1
+            if np.any(eigens>0):
+              print("Tu instability")
+              turing_type=2
+              if eigens[-1]<0:
+                turing_type=1
 
 
     return turing_type, eigens
@@ -355,13 +358,14 @@ def load(name,parlist):
         namelist.append(parlist[i]['name'])
     df = pd.DataFrame(p, columns = namelist)
     df['tutype']=tutype
+    df=df.sort_values(by='tutype', ascending=False)
     return df
 
 ####################################################
 
 
 def run(name):
-    par,tutype=GeneratePars(parlist, ncpus=40,Npars=1000)
+    par,tutype=GeneratePars(parlist, ncpus=40,Npars=5000)
     np.savetxt(name+'_turingtype.out', tutype)
     np.savetxt(name+'_par.out', par)
 
@@ -403,6 +407,7 @@ def par_plot(name,df,parlist):
             
       
     plt.savefig(name+'_full_par_plot.pdf', bbox_inches='tight')
+    plt.savefig(name+'_full_par_plot.png', bbox_inches='tight')
     plt.close()
 
 
@@ -410,7 +415,6 @@ def par_plot(name,df,parlist):
 def niceplot(name):
     df=load(name,parlist)
     par_plot(name,df,parlist)
-
 
     turingpar=[]
     tu_df = df[df['tutype']>0]
@@ -422,24 +426,27 @@ def niceplot(name):
     w= 0.3
     nx, ny = round(w/d), round(h/d)
     density=np.ones((nx, ny))
-    AHL = np.ones((nx, ny))*0.2
-    AHL2 = np.ones((nx, ny))*0.2
+    G = np.ones((nx, ny))*10
+    R = np.ones((nx, ny))*10
+    A = np.ones((nx, ny))*10
     #AHL[1,round(5/d)]=5
     #AHL2[1,round(5/d)]=5
     for i in np.arange(1,ny-1):
-                AHL[1][i]=AHL[1][i]*random.randint(0,10)/10
-                AHL2[1][i]=AHL2[1][i]*random.randint(0,10)/10
+                R[1][i]=R[1][i]*random.randint(0,10)/10
+                G[1][i]=G[1][i]*random.randint(0,10)/10
+                A[1][i]=A[1][i]*random.randint(0,10)/10
 
     print(nrow)
     for n in np.arange(0,nrow):
         par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
         p=pars_to_dict(par,parlist)
-        da, da2= Integration(AHL,AHL2,density,p,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
+        r, g,a= Integration(G,R,A,density,p,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
        # plot1d(da,da2,0)
         plt.subplot(round(np.sqrt(nrow)),round(np.sqrt(nrow)),n+1)
-        plt.plot(da[-2][1],'g')
-        plt.plot(da2[-2][1],'r')
-        plt.ylim(0,1)
+        plt.plot(r[-2][1],'g')
+        plt.plot(g[-2][1],'r')
+        plt.plot(a[-2][1],'--b')
+       # plt.ylim(0,1)
         print(n)
         
     plt.savefig(name+'_Tu_plot.pdf', bbox_inches='tight')
@@ -450,7 +457,10 @@ def niceplot(name):
 #main function
 ####################################################################
 
-name='TSRD_001'
+name='TSRD_003'
 run(name)
+tt = 100 #totaltime
+h = 10 #10
+w= 0.3
 niceplot(name)
 

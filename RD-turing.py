@@ -58,7 +58,10 @@ maxD= 1.1
 d = 0.1 #interval size
 d2 = d*d
 dt = d2 * d2 / (2 * maxD * (d2 + d2)) #interval time according to diffusion and interval dist
-
+tt = 100 #totaltime
+h = 10 #10
+w= 0.3
+nx, ny = round(w/d), round(h/d)
 
 def diffusion(u0,d,D, oneD=False):
     d2 = d*d
@@ -299,7 +302,7 @@ def turinginstability(par):
                 A[1][1] = A[1][1] - (qi**2)*par['D_ahl2']
                 eigvals, eigvecs =eig(A)
                 eigens=np.append(eigens,eigvals.real)
-                if np.any(eigens>0):
+            if np.any(eigens>0):
                     print("Tu instability")
                     turing_type=2
                     if eigens[-1]<0:
@@ -368,7 +371,7 @@ def load(name,parlist):
 
 
 def run(name):
-    par,tutype=GeneratePars(parlist, ncpus=40,Npars=1000)
+    par,tutype=GeneratePars(parlist, ncpus=40,Npars=5000)
     np.savetxt(name+'_turingtype.out', tutype)
     np.savetxt(name+'_par.out', par)
 
@@ -456,9 +459,9 @@ def niceplot(name):
 
 
 
-name='test'
-#run(name)
-#niceplot(name)
+name='turing_001'
+run(name)
+niceplot(name)
 
 
 

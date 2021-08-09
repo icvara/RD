@@ -1,0 +1,159 @@
+SLURM_MEM_PER_CPU=8192
+SLURM_NODEID=0
+SLURM_TASK_PID=1037939
+SLURM_PRIO_PROCESS=0
+SLURM_SUBMIT_DIR=/users/ibarbier/RD
+SLURM_CPUS_PER_TASK=40
+SLURM_PROCID=0
+SLURM_JOB_GID=11000
+SLURMD_NODENAME=dna026
+SLURM_TASKS_PER_NODE=1
+SLURM_NNODES=1
+SLURM_JOB_NODELIST=dna026
+SLURM_CLUSTER_NAME=curnagl
+SLURM_NODELIST=dna026
+SLURM_NTASKS=1
+SLURM_JOB_CPUS_PER_NODE=40
+SLURM_TOPOLOGY_ADDR=core.edge2.dna026
+SLURM_WORKING_CLUSTER=curnagl:admin1:6817:9216:109
+SLURM_JOB_NAME=sbatch_findpar.sh
+SLURM_JOBID=839020
+SLURM_CONF=/etc/slurm/slurm.conf
+SLURM_NODE_ALIASES=(null)
+SLURM_JOB_QOS=cpu-normal
+SLURM_TOPOLOGY_ADDR_PATTERN=switch.switch.node
+SLURM_CPUS_ON_NODE=40
+SLURM_JOB_NUM_NODES=1
+SLURM_JOB_UID=69294
+SLURM_JOB_PARTITION=cpu
+SLURM_JOB_USER=ibarbier
+SLURM_NPROCS=1
+SLURM_SUBMIT_HOST=login.curnagl
+SLURM_JOB_ACCOUNT=yschaerl_snsf_2017
+SLURM_GTIDS=0
+SLURM_JOB_ID=839020
+SLURM_LOCALID=0
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+Tu instability
+>>>> Loop processing time: 1.210 sec on 40 CPU cores.
+61
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
