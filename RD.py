@@ -250,6 +250,27 @@ def jacobianMatrix(G,R,A,par):
     
     return A
 
+def approximateJacob(G,R,A,par):
+    par=addfixedpar(par)
+    delta=10e-5
+    density=1
+    g,r,a =model(G,R,A,d,density,par, isdiffusion=False,oneD =True)
+
+    dGdg = (model(G+delta,R,A,d,density,par, isdiffusion=False,oneD =True)[0] - g ) /delta
+    dGdr = (model(G,R+delta,A,d,density,par, isdiffusion=False,oneD =True)[0] - g ) /delta
+    dGda = (model(G,R,A+delta,d,density,par, isdiffusion=False,oneD =True)[0] - g ) /delta
+   
+    dRdg = (model(G+delta,R,A,d,density,par, isdiffusion=False,oneD =True)[1] - r ) /delta
+    dRdr = (model(G,R+delta,A,d,density,par, isdiffusion=False,oneD =True)[1] - r ) /delta
+    dRda = (model(G,R,A+delta,d,density,par, isdiffusion=False,oneD =True)[1] - r ) /delta
+
+    dAdg = (model(G+delta,R,A,d,density,par, isdiffusion=False,oneD =True)[2] - a ) /delta
+    dAdr = (model(G,R+delta,A,d,density,par, isdiffusion=False,oneD =True)[2] - a ) /delta
+    dAda = (model(G,R,A+delta,d,density,par, isdiffusion=False,oneD =True)[2] - a ) /delta
+
+    A = np.array([[dGdg,dGdr,dGda],[dRdg,dRdr,dRda],[dAdg,dAdr,dAda]])
+    
+    return A
 
 def findss(par):
     #list of fixed par
@@ -257,6 +278,7 @@ def findss(par):
     #function to find steady state
     #1. find where line reached 0
     Gi=np.arange(0,100,1)
+    Gi=np.logspace(-20,5,1000,base=10)
 
     f=solvedfunction(Gi,par)
     x=f[1:-1]*f[0:-2] #when the output give <0, where is a change in sign, meaning 0 is crossed
@@ -276,36 +298,102 @@ def findss(par):
 
     return ss
 
-
 def turinginstability(par):
     #step one find steady stateS
-    turing_type=0
-    q=np.arange(0,100,0.1) 
+    par=addfixedpar(par)
+
+    turing_type=[]
+    q=np.arange(0,200,1) 
+    #q=np.logspace(-4,4,500,base=10)
 #    ss =findsteadystate(par,nstep)
     ss= findss(par)
-    eigens=np.array([])
+    sse=[]
+    if len(ss)==0:
+        turing_type.append(np.nan)
     for i,s in enumerate(ss): 
         A=jacobianMatrix(s[0],s[1],s[2],par)
         eigvals, eigvecs =eig(A)
-        sse=eigvals.real
-        if np.all(sse<0): #if all neg = stable point, test turing instability
-           # print("stable")
+        sse.append(eigvals.real)
+        pos=sse[i][sse[i]>0]
+
+        if np.all(sse[i]<0): #if all neg = stable point, test turing instability
             # add diffusion as in scholes et al.
-            eigens=np.array([])
+            eigens_1=[]
+            eigens_2=[]
+            eigens_3=[]
             for qi in q:
                 A=jacobianMatrix(s[0],s[1],s[2],par)
                 A[2][2] = A[2][2] - (qi**2)*par['D_ahl']
                 eigvals, eigvecs =eig(A)
-                eigens=np.append(eigens,eigvals.real)
+                #eigens=np.append(eigens,eigvals.real)
+                eigens_1.append(eigvals.real[0])
+                eigens_2.append(eigvals.real[1])
+                eigens_3.append(eigvals.real[2])
+            eigens=np.array([eigens_1,eigens_2,eigens_3])
+
+               # plt.plot(eigens)
+               # plt.show()
             if np.any(eigens>0):
-              print("Tu instability")
-              turing_type=2
-              if eigens[-1]<0:
-                turing_type=1
+                
+               # print(eigens)
+                if np.all(eigens[:,-1]<0):
+                    turing_type.append(1)
+                    print(1)
+                else:
+                    turing_type.append(2)
+                    print(2)
+                print("Tu instability" )
+            else:
+                turing_type.append(0)
 
+        if len(pos)>1:
+            if pos[0]-pos[1] == 0:
+                print("oscillation")
+                turing_type.append(4)  #need to check hpf instability , need to add line here
+            else:
+                turing_type.append(0)  
+        else:
+            turing_type.append(0)
 
-    return turing_type, eigens
+    return ss, turing_type
+'''
+def turinginstability(par):
+    #step one find steady stateS
+    turing_type=[]
+    q=np.arange(0,100,0.1) 
+#    ss =findsteadystate(par,nstep)
+    ss= findss(par)
+    sse=[]
+    for i,s in enumerate(ss): 
+        A=jacobianMatrix(s[0],s[1],s[2],par)
+        eigvals, eigvecs =eig(A)
+        sse.append(eigvals.real)
+        pos=sse[i][sse[i]>0]
+        if np.all(sse[i]<0): #if all neg = stable point, test turing instability
+            # add diffusion as in scholes et al.
+            eigens=[]
+            for qi in q:
+                A=jacobianMatrix(s[0],s[1],s[2],par)
+                A[2][2] = A[2][2] - (qi**2)*par['D_ahl']
+                eigvals, eigvecs =eig(A)
+                #eigens=np.append(eigens,eigvals.real)
+                eigens.append(eigvals.real)
+            if np.any(eigens[i]>0):
+                print("Tu instability")
+                if eigens[i][-1]<0:
+                    turing_type.append(1)
+                else:
+                    turing_type.append(2)
+            else:
+                turing_type.append(0)
+        if len(pos)>1:
+            if pos[0]-pos[1] == 0:
+                print("oscillation")
+        else:
+            turing_type.append(0)
 
+    return ss, sse, turing_type
+'''
 
 def choosepar(parlist):
     #choose random par in the defined range
@@ -342,7 +430,7 @@ def calculatePar(parlist, iter):
   turingtype=[]
   newpar=choosepar(parlist)    
   p=pars_to_dict(newpar,parlist)
-  tu,e = turinginstability(p)
+  ss,tu = turinginstability(p)
   #if tu >0:
     #selectpar.append(newpar)
   turingtype.append(tu)
@@ -457,10 +545,6 @@ def niceplot(name):
 #main function
 ####################################################################
 
-name='TSRD_003'
+name='TSRD_001'
 run(name)
-tt = 100 #totaltime
-h = 10 #10
-w= 0.3
-niceplot(name)
 
