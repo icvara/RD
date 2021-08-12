@@ -68,12 +68,15 @@ parlist = [
   #  {'name' : 'D_ahl', 'lower_limit':0.01,'upper_limit':1.0},
 ]
 
-
-
+tt = 100 #totaltime
+h = 10 #10
+w= 0.3
 maxD= 1.1
 d = 0.1 #interval size
 d2 = d*d
 dt = d2 * d2 / (2 * maxD * (d2 + d2)) #interval time according to diffusion and interval dist
+nx, ny = round(w/d), round(h/d)
+
 
 def addfixedpar(par):
     #list of fixed par
@@ -298,16 +301,15 @@ def findss(par):
 
     return ss
 
-def turinginstability(par):
+def turinginstability(par,q=np.arange(0,200,1)):
     #step one find steady stateS
     par=addfixedpar(par)
-
-    turing_type=[]
-    q=np.arange(0,200,1) 
+    turing_type=[] 
     #q=np.logspace(-4,4,500,base=10)
 #    ss =findsteadystate(par,nstep)
     ss= findss(par)
     sse=[]
+    eigens=np.ones((len(ss),3,len(q)))*np.nan
     if len(ss)==0:
         turing_type.append(np.nan)
     for i,s in enumerate(ss): 
@@ -315,7 +317,6 @@ def turinginstability(par):
         eigvals, eigvecs =eig(A)
         sse.append(eigvals.real)
         pos=sse[i][sse[i]>0]
-
         if np.all(sse[i]<0): #if all neg = stable point, test turing instability
             # add diffusion as in scholes et al.
             eigens_1=[]
@@ -325,37 +326,46 @@ def turinginstability(par):
                 A=jacobianMatrix(s[0],s[1],s[2],par)
                 A[2][2] = A[2][2] - (qi**2)*par['D_ahl']
                 eigvals, eigvecs =eig(A)
-                #eigens=np.append(eigens,eigvals.real)
+                idx = eigvals.argsort()[::-1]   
+                eigvals = eigvals[idx]
                 eigens_1.append(eigvals.real[0])
                 eigens_2.append(eigvals.real[1])
-                eigens_3.append(eigvals.real[2])
-            eigens=np.array([eigens_1,eigens_2,eigens_3])
-
-               # plt.plot(eigens)
-               # plt.show()
-            if np.any(eigens>0):
-                
-               # print(eigens)
-                if np.all(eigens[:,-1]<0):
-                    turing_type.append(1)
-                    print(1)
-                else:
-                    turing_type.append(2)
-                    print(2)
-                print("Tu instability" )
-            else:
-                turing_type.append(0)
-
+                eigens_3.append(eigvals.real[2])           
+            eigens[i]= [eigens_1,eigens_2,eigens_3]
+            for ei,e in enumerate(eigens[i]):
+              if np.any(e>0):                
+                  if np.all(e[-1]<0):
+                      turing_type.append(1)
+                      print(1)
+                  else:
+                      turing_type.append(2)
+                      print(2)
+                  print("Tu instability" )
+              else:
+                  turing_type.append(0)
+                  
         if len(pos)>1:
             if pos[0]-pos[1] == 0:
                 print("oscillation")
-                turing_type.append(4)  #need to check hpf instability , need to add line here
+                eigens_1=[]
+                eigens_2=[]
+                eigens_3=[]
+                for qi in q:
+                    A=jacobianMatrix(s[0],s[1],s[2],par)
+                    A[2][2] = A[2][2] - (qi**2)*par['D_ahl']
+                    eigvals, eigvecs =eig(A)
+                    idx = eigvals.argsort()[::-1]   
+                    eigvals = eigvals[idx]
+                    eigens_1.append(eigvals.real[0])
+                    eigens_2.append(eigvals.real[1])
+                    eigens_3.append(eigvals.real[2])
+                eigens[i]= [eigens_1,eigens_2,eigens_3]
+                turing_type.append(10)  #need to check hpf instability , need to add line here
             else:
                 turing_type.append(0)  
         else:
             turing_type.append(0)
-
-    return ss, turing_type
+    return ss, np.nansum(turing_type), eigens
 '''
 def turinginstability(par):
     #step one find steady stateS
@@ -427,14 +437,12 @@ def GeneratePars(parlist, ncpus,Npars=1000):
 
 def calculatePar(parlist, iter):
   #selectpar=[]
-  turingtype=[]
   newpar=choosepar(parlist)    
   p=pars_to_dict(newpar,parlist)
-  ss,tu = turinginstability(p)
+  ss,tutype,e = turinginstability(p)
   #if tu >0:
     #selectpar.append(newpar)
-  turingtype.append(tu)
-  return newpar,turingtype
+  return newpar,tutype
 
 
 def load(name,parlist):
@@ -449,14 +457,64 @@ def load(name,parlist):
     df=df.sort_values(by='tutype', ascending=False)
     return df
 
-####################################################
+#############################################################
 
 
-def run(name):
-    par,tutype=GeneratePars(parlist, ncpus=40,Npars=5000)
-    np.savetxt(name+'_turingtype.out', tutype)
-    np.savetxt(name+'_par.out', par)
+def diffusionplot_1D(name,tu_df,parlist):
+    nrow=tu_df.shape[0]
+    density=np.ones((nx, ny))
+    G = np.ones((nx, ny))*10
+    R = np.ones((nx, ny))*10
+    A = np.ones((nx, ny))*10
+    #AHL[1,round(5/d)]=5
+    #AHL2[1,round(5/d)]=5
+    for i in np.arange(1,ny-1):
+                R[1][i]=R[1][i]*random.randint(0,10)/10
+                G[1][i]=G[1][i]*random.randint(0,10)/10
+                A[1][i]=A[1][i]*random.randint(0,10)/10
+    print(nrow)
+    for n in np.arange(0,nrow):
+        par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
+        p=pars_to_dict(par,parlist)
+        r, g,a= Integration(G,R,A,density,p,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
+       # plot1d(da,da2,0)
+        plt.subplot(round(np.sqrt(nrow)),round(np.sqrt(nrow)),n+1)
+        plt.plot(r[-2][1],'g')
+        plt.plot(g[-2][1],'r')
+        plt.plot(a[-2][1],'--b')
+       # plt.ylim(0,1)
+        print(n)
+        
+    plt.savefig(name+'_Tu_plot.pdf', bbox_inches='tight')
+    #plt.show()
 
+def instability_plot(name,tu_df,parlist):
+    q=np.arange(0,5,0.1)
+    nrow=tu_df.shape[0]
+    sizex=round(np.sqrt(nrow)+0.5)
+    sizey=round(np.sqrt(nrow))
+    cl=['red','green','blue','orange']
+    for n in np.arange(0,nrow):
+        par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
+        p=pars_to_dict(par,parlist)
+        ss,tutype,eigenpertub = turinginstability(p,q)
+        plt.subplot(sizex,sizey,n+1)
+        for ei,e in enumerate(eigenpertub): #for each ss
+            for line in e: #for each eigen
+              plt.plot(q,line,linewidth=0.5,c=cl[ei])
+        plt.text((max(q)-0.1),0.01,str(tutype),color="pink")
+        plt.axhline(y = 0.0, color = 'black', linestyle = '--',linewidth=0.1)
+        plt.yscale('symlog', linthresh=0.001)
+        #plt.ylim(-1,1)
+        plt.yticks(fontsize=2)
+        plt.ylabel("Eigens")
+        plt.xlabel("q")
+        
+    plt.tight_layout()
+       # plt.ylim(-0.0001,0.0001)
+
+        
+    plt.savefig(name+'_Pertubation.pdf', bbox_inches='tight')
 
 def par_plot(name,df,parlist):
 
@@ -497,48 +555,24 @@ def par_plot(name,df,parlist):
     plt.savefig(name+'_full_par_plot.pdf', bbox_inches='tight')
     plt.savefig(name+'_full_par_plot.png', bbox_inches='tight')
     plt.close()
+####################################################
 
+
+def run(name,Npars=5000):
+    par,tutype=GeneratePars(parlist, ncpus=40,Npars=Npars)
+    np.savetxt(name+'_turingtype.out', tutype)
+    np.savetxt(name+'_par.out', par)
 
 
 def niceplot(name):
     df=load(name,parlist)
-    par_plot(name,df,parlist)
-
-    turingpar=[]
     tu_df = df[df['tutype']>0]
-    nrow=tu_df.shape[0]
+    instability_plot(name,tu_df,parlist)
+    #par_plot(name,tu_df,parlist)
+    #diffusionplot_1D(name,tu_df,parlist)
+    
+    
 
-
-    tt = 100 #totaltime
-    h = 10 #10
-    w= 0.3
-    nx, ny = round(w/d), round(h/d)
-    density=np.ones((nx, ny))
-    G = np.ones((nx, ny))*10
-    R = np.ones((nx, ny))*10
-    A = np.ones((nx, ny))*10
-    #AHL[1,round(5/d)]=5
-    #AHL2[1,round(5/d)]=5
-    for i in np.arange(1,ny-1):
-                R[1][i]=R[1][i]*random.randint(0,10)/10
-                G[1][i]=G[1][i]*random.randint(0,10)/10
-                A[1][i]=A[1][i]*random.randint(0,10)/10
-
-    print(nrow)
-    for n in np.arange(0,nrow):
-        par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
-        p=pars_to_dict(par,parlist)
-        r, g,a= Integration(G,R,A,density,p,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
-       # plot1d(da,da2,0)
-        plt.subplot(round(np.sqrt(nrow)),round(np.sqrt(nrow)),n+1)
-        plt.plot(r[-2][1],'g')
-        plt.plot(g[-2][1],'r')
-        plt.plot(a[-2][1],'--b')
-       # plt.ylim(0,1)
-        print(n)
-        
-    plt.savefig(name+'_Tu_plot.pdf', bbox_inches='tight')
-    #plt.show()
 
 
 ####################################################################
@@ -546,5 +580,5 @@ def niceplot(name):
 ####################################################################
 
 name='TSRD_001'
-run(name)
-
+#run(name,Npars=40000)
+niceplot(name)

@@ -12,6 +12,11 @@ from scipy import optimize
 from scipy.optimize import brentq
 import pandas as pd
 
+
+
+name='turing_001'
+
+
 par={
     
     'K_RED':94,#3.5,
@@ -216,7 +221,72 @@ def findss(par):
         H2=H2/par['delta_ahl2']
         ss.append(np.array([H,H2]))
     return ss
+    
 
+def turinginstability(par,q=np.arange(0,200,1)):
+    #step one find steady stateS
+    par=getfixedpar(par)
+    turing_type=[] 
+    #q=np.logspace(-4,4,500,base=10)
+#    ss =findsteadystate(par,nstep)
+    ss= findss(par)
+    sse=[]
+    eigens=np.ones((len(ss),2,len(q)))*np.nan
+    if len(ss)==0:
+        turing_type.append(np.nan)
+    for i,s in enumerate(ss): 
+        A=jacobianMatrix(s[0],s[1],par)
+        eigvals, eigvecs =eig(A)
+        sse.append(eigvals.real)
+        pos=sse[i][sse[i]>0]
+        if np.all(sse[i]<0): #if all neg = stable point, test turing instability
+            # add diffusion as in scholes et al.
+            eigens_1=[]
+            eigens_2=[]
+            for qi in q:
+                A=jacobianMatrix(s[0],s[1],par)
+                A[0][0] = A[0][0] - (qi**2)*par['D_ahl']
+                A[1][1] = A[1][1] - (qi**2)*par['D_ahl2']
+                eigvals, eigvecs =eig(A)
+                idx = eigvals.argsort()[::-1]   
+                eigvals = eigvals[idx]
+                eigens_1.append(eigvals.real[0])
+                eigens_2.append(eigvals.real[1])           
+            eigens[i]= [eigens_1,eigens_2]
+            for ei,e in enumerate(eigens[i]):
+              if np.any(e>0):                
+                  if np.all(e[-1]<0):
+                      turing_type.append(1)
+                      print(1)
+                  else:
+                      turing_type.append(2)
+                      print(2)
+                  print("Tu instability" )
+              else:
+                  turing_type.append(0)
+                  
+        if len(pos)>1:
+            if pos[0]-pos[1] == 0:
+                print("oscillation")
+                eigens_1=[]
+                eigens_2=[]
+                for qi in q:
+                    A=jacobianMatrix(s[0],s[1],par)
+                    A[0][0] = A[0][0] - (qi**2)*par['D_ahl']
+                    A[1][1] = A[1][1] - (qi**2)*par['D_ahl2']
+                    eigvals, eigvecs =eig(A)
+                    idx = eigvals.argsort()[::-1]   
+                    eigvals = eigvals[idx]
+                    eigens_1.append(eigvals.real[0])
+                    eigens_2.append(eigvals.real[1])
+                eigens[i]= [eigens_1,eigens_2]
+                turing_type.append(10)  #need to check hpf instability , need to add line here
+            else:
+                turing_type.append(0)  
+        else:
+            turing_type.append(0)
+    return ss, np.nansum(turing_type), eigens
+'''
 def turinginstability(par):
     #step one find steady stateS
     par=getfixedpar(par)
@@ -270,8 +340,8 @@ def turinginstability(par):
         else:
             turing_type.append(0)
 
-    return ss, turing_type
-
+    return ss, np.nansum(turing_type)  #here I sum for the moment , bc I cannot save file otherwise
+'''
 
 def pars_to_dict(pars,parlist):
 ### This function is not necessary, but it makes the code a bit easier to read,
@@ -308,14 +378,12 @@ def GeneratePars(parlist, ncpus,Npars=1000):
 
 def calculatePar(parlist, iter):
   #selectpar=[]
-  turingtype=[]
   newpar=choosepar(parlist)    
   p=pars_to_dict(newpar,parlist)
-  ss,tu = turinginstability(p)
+  ss,tutype = turinginstability(p)
   #if tu >0:
     #selectpar.append(newpar)
-  turingtype.append(tu)
-  return newpar,turingtype
+  return newpar,tutype
 
 
 def load(name,parlist):
@@ -330,9 +398,11 @@ def load(name,parlist):
     return df
 
 def run(name):
-    par,tutype=GeneratePars(parlist, ncpus=40,Npars=5000)
-    np.savetxt(name+'_turingtype.out', tutype)
+    par,tutype=GeneratePars(parlist, ncpus=40,Npars=20000)
     np.savetxt(name+'_par.out', par)
+    print(tutype)
+    np.savetxt(name+'_turingtype.out', tutype)
+    
 
 ####################################################
 
@@ -419,15 +489,43 @@ def par_plot(name,df,parlist):
     plt.close()
 
 
+def instability_plot(name,tu_df,parlist):
+    q=np.arange(0,5,0.1)
+    nrow=tu_df.shape[0]
+    sizex=round(np.sqrt(nrow)+0.5)
+    sizey=round(np.sqrt(nrow))
+    cl=['red','green','blue','orange']
+    for n in np.arange(0,nrow):
+        par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
+        p=pars_to_dict(par,parlist)
+        ss,tutype,eigenpertub = turinginstability(p,q)
+        plt.subplot(sizex,sizey,n+1)
+        for ei,e in enumerate(eigenpertub): #for each ss
+            for line in e: #for each eigen
+              plt.plot(q,line,linewidth=0.5,c=cl[ei])
+        plt.text((max(q)-0.1),0.01,str(tutype),color="pink")
+        plt.axhline(y = 0.0, color = 'black', linestyle = '--',linewidth=0.1)
+        plt.yscale('symlog', linthresh=0.001)
+        #plt.ylim(-1,1)
+        plt.yticks(fontsize=2)
+        plt.ylabel("Eigens")
+        plt.xlabel("q")
+        
+    plt.tight_layout()
+       # plt.ylim(-0.0001,0.0001)
 
+        
+    plt.savefig(name+'_Pertubation.pdf', bbox_inches='tight')
 
 def niceplot(name):
-    df=load(name,parlist)
-    par_plot(name,df,parlist)
-
-
-    turingpar=[]
+    df=load(name,parlist)  
     tu_df = df[df['tutype']>0]
+    instability_plot(name,tu_df,parlist)
+    #par_plot(name,tu_df,parlist)
+    #diffusionplot_1D(name,tu_df,parlist)
+    
+
+def diffusionplot_1D(name,tu_df,parlist):
     nrow=tu_df.shape[0]
 
     tt = 100 #totaltime
@@ -461,8 +559,8 @@ def niceplot(name):
 
 ##########################################################
 
-name='turing_001'
-run(name)
+
+#run(name)
 niceplot(name)
 
 
