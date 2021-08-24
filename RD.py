@@ -68,7 +68,7 @@ parlist = [
   #  {'name' : 'D_ahl', 'lower_limit':0.01,'upper_limit':1.0},
 ]
 
-tt = 100 #totaltime
+tt = 500 #totaltime
 h = 10 #10
 w= 0.3
 maxD= 1.1
@@ -505,7 +505,7 @@ def instability_plot(name,tu_df,parlist):
         plt.text((max(q)-0.1),0.01,str(tutype),color="pink")
         plt.axhline(y = 0.0, color = 'black', linestyle = '--',linewidth=0.1)
         plt.yscale('symlog', linthresh=0.001)
-        #plt.ylim(-1,1)
+        plt.ylim(-1,1)
         plt.yticks(fontsize=2)
         plt.ylabel("Eigens")
         plt.xlabel("q")
@@ -581,4 +581,67 @@ def niceplot(name):
 
 name='TSRD_001'
 #run(name,Npars=40000)
-niceplot(name)
+#niceplot(name)
+
+
+############################################
+
+tt=20
+df=load(name,parlist)
+tu_df = df[df['tutype']>0]
+#print(tu_df)
+n=2
+density=np.ones((nx, ny))
+
+    #AHL[1,round(5/d)]=5
+    #AHL2[1,round(5/d)]=5
+
+
+par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
+p=pars_to_dict(par,parlist)
+ss,tutype,eigenpertup=turinginstability(p,q=np.arange(0,200,1))
+ssn=2
+A=jacobianMatrix(ss[ssn][0],ss[ssn][1],ss[ssn][2],p)
+eigvals, eigvecs =eig(A)
+print(eigvals)
+
+#print(ss)
+#print(eigenpertup.shape)
+print(eigenpertup[:,:,0])
+
+G = np.ones((nx, ny))*10e-100
+R = np.ones((nx, ny))*10e-100
+A = np.ones((nx, ny))*10e-100
+
+G[1][:]=(ss[ssn][0]+10e-5)
+R[1][:]=(ss[ssn][1]+10e-5)
+A[1][:]=(ss[ssn][2]+10e-5)
+
+#for i in np.arange(1,ny-1):
+#                R[1][i]=R[1][i]*random.randint(0,10)/100
+#                G[1][i]=G[1][i]*random.randint(0,10)/100
+#                A[1][i]=A[1][i]*random.randint(0,10)/100
+
+'''
+r, g,a= Integration(G,R,A,density,p,totaltime=tt,dt=dt,d=d,oneD=True, dimensionless=False,isdiffusion=True)
+# plot1d(da,da2,0)
+#plt.subplot(round(np.sqrt(nrow)),round(np.sqrt(nrow)),n+1)
+plt.subplot(2,2,1)
+plt.plot(r[-2][1],'g')
+plt.plot(g[-2][1],'r')
+plt.plot(a[-2][1],'--b')
+plt.yscale("log")
+plt.subplot(2,2,2)
+plt.plot(r[0][1],'g')
+plt.plot(g[0][1],'r')
+plt.plot(a[0][1],'--b')
+plt.yscale("log")
+plt.subplot(2,2,3)
+print(a[:,1,5].shape)
+plt.plot(r[:-2,1,50],'g')
+plt.plot(g[:-2,1,50],'r')
+plt.plot(a[:-2,1,50],'--b')
+plt.yscale("log")
+#plt.ylim(6*10e-5,8*10e-4)
+plt.show()
+'''
