@@ -599,6 +599,7 @@ density=np.ones((nx, ny))
 
 par=tu_df.iloc[n].tolist()[:-1] #transform in list and remove turing type
 p=pars_to_dict(par,parlist)
+print(p)
 ss,tutype,eigenpertup=turinginstability(p,q=np.arange(0,200,1))
 ssn=2
 A=jacobianMatrix(ss[ssn][0],ss[ssn][1],ss[ssn][2],p)
