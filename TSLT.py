@@ -7,17 +7,18 @@ import random
 from scipy import optimize
 from scipy.optimize import brentq
 import pandas as pd
+import seaborn as sns
 
 par={
     
     'alpha_red': 0,
     
-    'beta_red': 100,
+    'beta_red': 1000,
 
     'K_IPTG':2.22,
 
-    'K_GREEN':10,
-    'K_RED':20,
+    'K_GREEN':1,
+    'K_RED':3.5,
 
     'n_GREEN':2,
     'n_RED':2,
@@ -29,16 +30,16 @@ par={
     'beta_green': 100,
     'leak_green':0,
 
-    'K_ahl_red':133,
-    'K_ahl_green':1133,
+    'K_ahl_red':10,
+    'K_ahl_green':233,
     'n_ahl_green':1.61,
     'n_ahl_red':1.61,
 
     #luxI par
-    'beta_ahl':100,
-    'K_ahl':1,
-    'n_ahl':8.,
-    'delta_ahl':1
+    'beta_ahl':0.1,
+    'K_ahl':10,
+    'n_ahl':4.,
+    'delta_ahl':1#1
 
 }
 
@@ -129,17 +130,16 @@ def model_TSXLT(GREENi,REDi,AHLi,IPTG,par):
     return GREEN,RED,AHL
 
 
-def Integration(G0,R0,U0,IPTG,p,totaltime=1000,dt=0.1):   
+def Integration(G0,R0,U0,IPTG,p,totaltime=500,dt=0.1):   
     #U0 need to be of shape (totaltime,nx,ny)
     Gi=G0
     Ri=R0
     Ai=U0
+    AHL=U0
 
-    G = np.zeros(((round(totaltime/dt+0.5)+1),U0.shape[0],IPTG.shape[1]))
-    R = np.zeros(((round(totaltime/dt+0.5)+1),U0.shape[0],IPTG.shape[1]))
-    A= np.zeros(((round(totaltime/dt+0.5)+1),U0.shape[0],IPTG.shape[1]))
-
-
+    G = np.zeros(((round(totaltime/dt+0.5)+1),U0.shape[0],G0.shape[1]))
+    R = np.zeros(((round(totaltime/dt+0.5)+1),U0.shape[0],G0.shape[1]))
+    A= np.zeros(((round(totaltime/dt+0.5)+1),U0.shape[0],G0.shape[1]))
     G[0]=G0
     R[0]=R0
     A[0]=U0
@@ -151,12 +151,12 @@ def Integration(G0,R0,U0,IPTG,p,totaltime=1000,dt=0.1):
         g,r = model_TSL(Gi,Ri,U0,IPTG,p)
         g,r = model_TSLT(Gi,Ri,U0,IPTG,p)
         a=0
-       # g,r,a = model_TSXLT(Gi,Ri,Ai,IPTG,p)
+        g,r,a = model_TSXLT(Gi,Ri,Ai,IPTG,p)
 
 
         Gi = Gi + g*dt
         Ri = Ri + r*dt
-        Ai= Ai + a*dt
+        Ai= Ai + a*dt + AHL
         G[i]=Gi
         R[i]=Ri
         A[i]=Ai
@@ -165,6 +165,186 @@ def Integration(G0,R0,U0,IPTG,p,totaltime=1000,dt=0.1):
     return G, R,A
 
 
+def jacobianMatrix(G,R,A,par):
+    # [ DG/dg   DG/dr   DG/da ]
+    # [ DR/dg   DR/dr   DR/da ]
+    # [ DA/dg   DA/dr   DA/da ]    
+
+    #need to double check , some mistake are here
+    dGdg = - par['delta_green']    
+    dGdr = -((par['beta_green'])*np.power((par['K_ahl_green']*A),par['n_ahl_green'])*par['n_RED']*np.power((par['K_RED']*R),par['n_RED']))
+    dGdr =  dGdr/((np.power((par['K_ahl_green']*A),par['n_ahl_green'])+1)*R*np.power((np.power((par['K_RED']*R),par['n_RED'])+1),2))   
+    dGda =((par['beta_green']) *par['n_ahl_green']*np.power((par['K_ahl_green']*A),par['n_ahl_green'])) 
+    dGda =  dGda/((np.power((par['K_RED']*R),par['n_RED'])+1)*A*np.power((np.power((par['K_ahl_green']*A),par['n_ahl_green'])+1),2))
+    
+    dRdg = - ((par['beta_red'])*np.power((par['K_ahl_red']*A),par['n_ahl_red'])*par['n_GREEN']*np.power((par['K_GREEN']*G),par['n_GREEN']))
+    dRdg =  dRdg/((np.power((par['K_ahl_red']*A),par['n_ahl_red'])+1)*G*np.power((np.power((par['K_GREEN']*G),par['n_GREEN'])+1),2))    
+    dRdr = - par['delta_red']    
+    dRda = ((par['beta_red']) *par['n_ahl_red']*np.power((par['K_ahl_red']*A),par['n_ahl_red']))
+    dRda=dRda/((np.power((par['K_GREEN']*G),par['n_GREEN'])+1)*A*np.power((np.power((par['K_ahl_red']*A),par['n_ahl_red'])+1),2))
+    
+    dAdg = (par['beta_ahl']*par['n_ahl']*(np.power((par['K_ahl']*G),par['n_ahl'])))
+    dAdg = dAdg/ (G*np.power((np.power((G*par['K_ahl']),par['n_ahl'])+1),2))
+    dAdr = 0
+    dAda = -par['delta_ahl']
+    A = np.array([[dGdg,dGdr,dGda],[dRdg,dRdr,dRda],[dAdg,dAdr,dAda]])  
+    return A
+
+
+def solvedfunction(Gi,AHLe,par):
+    #rewrite the system equation to have only one unknow and to be call with scipy.optimze.brentq
+    #the output give a function where when the line reach 0 are a steady states
+    A= (par['beta_ahl']*np.power(Gi*par['K_ahl'],par['n_ahl']))/(1+np.power(Gi*par['K_ahl'],par['n_ahl']))
+    A= (A/par['delta_ahl'])
+    A= A + AHLe
+    A=np.array(A)
+    A[A<0]=0
+
+
+    R = (par['beta_red'])*np.power(A*par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*par['K_ahl_red'],par['n_ahl_red']))
+    R = R / (1 + np.power(Gi*par['K_GREEN'],par['n_GREEN']))
+    R = R/ par['delta_red']
+
+    G = (par['beta_green'])*np.power(A*par['K_ahl_green'],par['n_ahl_green'])/(1+np.power(A*par['K_ahl_green'],par['n_ahl_green']))
+    G = G / (1 + np.power(R*par['K_RED'],par['n_RED']))
+    G = G / par['delta_green']
+    func = G - Gi
+
+    return func
+  
+
+
+
+def findss(par,AHLe):
+    #list of fixed par
+    #function to find steady state
+    #1. find where line reached 0
+    Gi=np.logspace(-10,5,1000,base=10)
+    Gi[0]=0
+    ss=[]
+    nNode=3 # number of nodes : X,Y,Z
+    nStstate= 5
+    ss=np.ones((len(AHLe),nStstate,nNode))*np.nan
+
+    for ai,a in enumerate(AHLe):
+        f=solvedfunction(Gi,a,par)
+        x=f[1:-1]*f[0:-2] #when the output give <0, where is a change in sign, meaning 0 is crossed
+        index=np.where(x<0)
+
+        for it,i in enumerate(index[0]):
+            G=brentq(solvedfunction, Gi[i], Gi[i+1],args=(a,par)) #find the value of AHL at 0
+            #now we have AHL we can find AHL2 ss
+            A= (par['beta_ahl']*np.power(G*par['K_ahl'],par['n_ahl']))/(1+np.power(G*par['K_ahl'],par['n_ahl']))
+            A= A/par['delta_ahl'] + a
+
+            R = par['alpha_red']+((par['beta_red']-par['alpha_red'])*np.power(A*par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*par['K_ahl_red'],par['n_ahl_red']))
+            R = R / (1 + np.power(G*par['K_GREEN'],par['n_GREEN']))
+            R = R/ par['delta_red']        
+           # ss.append(np.array([G,R,A]))
+
+       
+            ss[ai][it]=np.array([G,R,A])
+
+
+
+    return ss
+
+
+def getEigen(ARA,par,s):
+    A=meq.jacobianMatrix(ARA,s[0],s[1],s[2],par)
+    eigvals, eigvecs =np.linalg.eig(A)
+    sse=eigvals.real
+    return sse 
+#################################################################33
+#######################################################################
+
+AHLe=np.logspace(-10,-1,100,base=10)
+AHLe[0]=0
+#AHLe=np.zeros(5)
+
+ss=findss(par,AHLe)
+
+
+st=np.ones(ss.shape)*np.nan
+os=np.ones(ss.shape)*np.nan
+un=np.ones(ss.shape)*np.nan
+
+for i,s1 in enumerate(ss):
+    for k,s in enumerate(s1):
+        if np.any(np.isnan(s)==False): 
+            j = jacobianMatrix(s[0],s[1],s[2],par) 
+            eigvals, eigvecs =np.linalg.eig(j)
+            sse=eigvals.real
+            if np.all(sse<0):
+                st[i][k]=s
+            else:
+                pos=sse[sse>0]
+                if len(pos)==2:
+                    if pos[0]-pos[1]==0:
+                        os[i][k]=s
+                else:
+                    un[i][k]=s
+
+
+plt.subplot(1,3,1)
+plt.plot(AHLe,os[:,:,0],'*m')
+plt.plot(AHLe,st[:,:,0],'og')
+plt.plot(AHLe,un[:,:,0],'.k')
+plt.yscale('log')
+plt.xscale('log')
+
+plt.subplot(1,3,2)
+plt.plot(AHLe,os[:,:,1],'*m')
+plt.plot(AHLe,st[:,:,1],'or')
+plt.plot(AHLe,un[:,:,1],'.k')
+plt.yscale('log')
+plt.xscale('log')
+
+plt.subplot(1,3,3)
+plt.plot(AHLe,os[:,:,2],'*m')
+plt.plot(AHLe,st[:,:,2],'ob')
+plt.plot(AHLe,un[:,:,2],'.k')
+plt.yscale('log')
+plt.xscale('log')
+
+plt.show()
+
+
+
+IPTG=0
+
+
+'''
+AHLrange= np.logspace(-10,-1,100,base=10)
+Grange= np.logspace(-6,1,100,base=10)
+Grange= np.array([0,100])
+
+Rrange= np.logspace(-6,1,100,base=10)
+Rrange= np.array([100,0])
+
+
+
+A0=np.ones((len(AHLrange),len(Grange)))*Grange
+G0=np.ones((len(AHLrange),len(Grange)))*AHLrange[:,None]
+R0=np.ones((len(AHLrange),len(Grange)))*AHLrange[:,None]
+
+
+
+
+g,r,a=Integration(G0,R0,A0,IPTG,par)
+print(a.shape)
+#plt.plot(y[-2])
+plt.plot(AHLrange,g[-2])
+plt.yscale('log')
+plt.xscale('log')
+
+plt.show()
+#sns.heatmap(g[-2]/r[-2],cmap="RdYlGn")# norm=LogNorm())
+#plt.show()
+'''
+
+
+'''
 IPTGrange= np.array([0,7,10])
 AHLrange= np.logspace(-6,1,100,base=10)
 
@@ -250,6 +430,24 @@ plt.plot(AHLrange,a2[-2,:,2],'b--')
 plt.xscale("log")
 
 plt.show()
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 '''
 def solvedfunction(Gi,Ai,par):

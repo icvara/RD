@@ -22,54 +22,63 @@ def get_dt(dxy,maxD):
 par={
     
     
-    'beta_red':100,#,100,
+    'alpha_red': 0,
+    
+    'beta_red': 1000,
 
     'K_IPTG':2.22,
 
-    'K_GREEN':15,
-    'K_RED':20,
+    'K_GREEN':1,
+    'K_RED':3.5,
 
     'n_GREEN':2,
     'n_RED':2,
     'delta_red':1,#8.3,
-    'delta_green':1,#1,#8.3,
+    'delta_green':1,#8.3,
 
     #need to be defined
-    'beta_green':100,# 100,
+    'alpha_green': 0,
+    'beta_green': 100,
     'leak_green':0,
 
-    'K_ahl_red':133,
-    'K_ahl_green':1133,
+    'K_ahl_red':10,#0.1,
+    'K_ahl_green':233,
     'n_ahl_green':1.61,
     'n_ahl_red':1.61,
 
-     #luxI par
+    #luxI par
     'beta_ahl':0.1,
-    'K_ahl':1,
-    'n_ahl':8.,
+    'K_ahl':10,
+    'n_ahl':4.,
     'delta_ahl':1,
-    'leak_ahl':10e-7,
 
+    'leak_ahl':0,
 
-    'max_density':15, #stationary
+	'K_growth':0.5, #speed to reach stationary
+    'max_density':100, #stationary
+
 	'D': 10,# 4.9e-6 *60*60, #diffusion rate
-	'G': 1e-10,# 45e-4,  #colonies horizontal expantion
-	 #growth diffusion rate.
-	'K_growth':2.0, #speed to reach stationary
-	'growth_speed':2#2#2 # doubling time in h 
+	#'delta_ahle':0.15,#0.15,#1,#0.07,
 
+	'G': 0.05#0.005, #cm/h ??    #1e-10,# 45e-4,  #colonies horizontal expantion
+	 #growth diffusion rate.
+	#'growth_speed':2#2#2 # doubling time in h 
 
 
 }
+
+
+
+
 
 #growth speed 45 um/h warren et al  2019 eLife
 # AHL diffusion 6.7*10^5 µm2/min payne et al 2013 or 4.9 x 10-6 cm2/s Stewart P.S., 2003
 
 #size of the plate
-x=2 #cm
-y=2 #cm
-tt = 72#totaltime hour
-dxy = 0.02 #interval size in cm
+x=4 #cm
+y=4 #cm
+tt = 35#totaltime hour
+dxy = 0.1 #interval size in cm
 #dt= 1 # 1h
 dt = get_dt(dxy,maxD=1.1)  #interval time according to diffusion and interval dist
 dt=0.01
@@ -165,7 +174,6 @@ def growth(c0,g0,r0,u0,d0,par,time_count):
 		c[1:-1,1:-1] = s3
 		time_count=0
 
-
 		g=g0.copy()
 		g[1:-1,1:-1] = dilution(g0,c0,s2,s1)
 		r=r0.copy()
@@ -184,6 +192,7 @@ def growth(c0,g0,r0,u0,d0,par,time_count):
 
 	return c,g,r,u,d, time_count
 
+
 def dilution(x0,c0,s2,s1):
 	c=c0.copy()
 	new_cell = s2.copy()-c[1:-1, 1:-1]# position of new cell
@@ -199,22 +208,55 @@ def dilution(x0,c0,s2,s1):
 	#g[1:-1, 1:-1] =  (gxx + gyy) 
 	#g[1:-1, 1:-1]=g[1:-1, 1:-1]*c4
 
-def Integration(C0,G0,R0,U0,d0,IPTG,par,totaltime=10,dt=dt,dxy=dxy):   
+def growth3(c0,c1,d0,par,t,dxy):
+
+	r= par['G']*t /dxy
+	lenx = np.arange(nx)
+	leny = np.arange(ny)
+	cell=c1.copy()
+	center = np.where(c0>0)
+	for x in lenx:
+		for y in leny:
+			if (x-center[0])**2 + (y-center[1])**2 <= r**2 :
+					cell[x,y]=1
+
+	density =  par['K_growth']*d0 * (1 - d0 / par['max_density'])
+	density = density + (cell-c1) #add new cell at 1 density for the moment
+
+
+	return cell,density
+
+	#test if point inside circle.. from pythagore.. could has more computationaly optimize method
+
+
+def heredity(x0,c0,s2,s1):
+	x=0
+	#todo
+	return x
+
+
+
+
+def Integration(C0,G0,R0,U0,Ue0,d0,IPTG,par,totaltime=10,dt=dt,dxy=dxy):   
 	#U0 need to be of shape (totaltime,nx,ny)
 	Ui=U0 
-	di=d0
+	Uei=Ue0
+	Di=d0
 	Ci=C0
 	Gi=G0
 	Ri=R0
 
 	U= np.zeros(((round(totaltime/dt+0.5)+1),nx,ny))
-	d= np.zeros(((round(totaltime/dt+0.5)+1),nx,ny))
+	Ue= np.zeros(((round(totaltime/dt+0.5)+1),nx,ny))
+
+	D= np.zeros(((round(totaltime/dt+0.5)+1),nx,ny))
 	C= np.zeros(((round(totaltime/dt+0.5)+1),nx,ny))
 	G = np.zeros(((round(totaltime/dt+0.5)+1),nx,ny))
 	R = np.zeros(((round(totaltime/dt+0.5)+1),nx,ny))
 
 	U[0]=U0 
-	d[0]=d0 
+	Ue[0]=Ue0
+	D[0]=d0 
 	G[0]=G0
 	R[0]=R0
 	C[0]=C0
@@ -225,28 +267,32 @@ def Integration(C0,G0,R0,U0,d0,IPTG,par,totaltime=10,dt=dt,dxy=dxy):
 
 	while t < totaltime:
 		
-		g,r,u = model(Gi,Ri,Ui,Ci,di,IPTG,par)
-		c,gc,rc,uc,di,time_count= growth(Ci,Gi,Ri,Ui,di,par,time_count)
-		#u = model_diffusion2D(u1,par,dxy)
-		Ci = Ci + c #*dt
-		
+		ue=0
+		g,r,u= model(Gi,Ri,Ui,Ci,Di,IPTG,par)
+		#c,gc,rc,uc,di,time_count= growth(Ci,Gi,Ri,Ui,di,par,time_count)
+		c,d = growth3(C0,Ci,Di,par,t=t,dxy=dxy)
 
+		#u = model_diffusion2D(u1,par,dxy)
+		Ci = c 
+		Di= Di + d*dt
+		Uei = Uei + ue*dt
 		Ui = Ui + u*dt #+uc
 		#print(Ui[middle-2:middle,:])
 		#print(".................")
 	#	Uoi = Uoi + uo*dt
-		Gi = Gi + g*dt +gc
-		Ri = Ri + r*dt +rc
+		Gi = Gi + g*dt #+gc
+		Ri = Ri + r*dt #+rc
 		#Ci[Ci>par['max_density']]=par['max_density']
 		G[i]=Gi
 		U[i]=Ui
-		d[i]=di
+		Ue[i]=Uei
+		D[i]=Di
 		C[i]=Ci
 		R[i]=Ri
 		t=t+dt
 		time_count = time_count+dt
 		i=i+1
-	return U,d, C,  G, R
+	return U,Ue,D, C,  G, R
 
 
 
@@ -254,23 +300,13 @@ def Integration(C0,G0,R0,U0,d0,IPTG,par,totaltime=10,dt=dt,dxy=dxy):
 def model(GREENi,REDi,AHLi,CELLi,density,IPTG,par):
     
 
-
-    st_thr=0.90  
-    stationary=density.copy()
-    #stationary[stationary>st_thr*par['max_density']]=0
-    stationary[stationary>0]=1
-    #stationary = (1 - CELLi / par['max_density'])
- 
-    #growth,green_growth, red_growth = model_growth1(CELLi,GREENi, REDi, par,dxy)
-
-   # CELL,green_growth, red_growth,time_count =growth(CELLi,GREENi, REDi,par,time_count)
+    stationary = (1 - density/par['max_density']) * CELLi
+    stationary = CELLi
 
     GREEN = (par['beta_green']*np.power(AHLi*par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*par['K_ahl_green'],par['n_ahl_green']))
     GREEN = GREEN / (1 + np.power(REDi*par['K_RED'],par['n_RED']))
-    GREEN = GREEN - par['delta_green']*GREENi  + par['leak_green']
+    GREEN = GREEN - par['delta_green']*GREENi 
     GREEN = GREEN*stationary# + green_growth
-
-
 
     free_GREENi= GREENi / ( 1+ par['K_IPTG']*IPTG)
     RED = (par['beta_red']*np.power(AHLi*par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*par['K_ahl_red'],par['n_ahl_red']))
@@ -278,20 +314,44 @@ def model(GREENi,REDi,AHLi,CELLi,density,IPTG,par):
     RED = RED - par['delta_red']*REDi # + par['alpha_red']
     RED=RED*stationary # + red_growth
 
-
     AHL = (par['beta_ahl']*np.power(GREENi*par['K_ahl'],par['n_ahl']))/(1+np.power(GREENi*par['K_ahl'],par['n_ahl']))
+    AHL = AHL +par['leak_ahl']
     AHLdif = model_diffusion2D(AHLi,par,dxy) 
-
-    AHL = AHL +par['leak_ahl'] 
-    AHL = AHL*stationary - par['delta_ahl']*(AHLi) 
-    AHL= AHL + AHLdif 
+    AHL= AHL*stationary + AHLdif - par['delta_ahl']*(AHLi)
 
    # AHL= AHL +  
 
-
-
     return GREEN,RED,AHL
 
+def model2(GREENi,REDi,AHLi,AHLei,CELLi,density,IPTG,par):
+    
+    AHLii = AHLei
+
+    stationary = (1 - density/par['max_density']) * CELLi
+    #stationary = CELLi
+
+    GREEN = (par['beta_green']*np.power(AHLii*par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLii*par['K_ahl_green'],par['n_ahl_green']))
+    GREEN = GREEN / (1 + np.power(REDi*par['K_RED'],par['n_RED']))
+    GREEN = GREEN - par['delta_green']*GREENi 
+    GREEN = GREEN*stationary# + green_growth
+
+    free_GREENi= GREENi / ( 1+ par['K_IPTG']*IPTG)
+    RED = (par['beta_red']*np.power(AHLii*par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLii*par['K_ahl_red'],par['n_ahl_red']))
+    RED = RED / (1 + np.power(free_GREENi*par['K_GREEN'],par['n_GREEN']))
+    RED = RED - par['delta_red']*REDi # + par['alpha_red']
+    RED=RED*stationary # + red_growth
+
+    AHL = (par['beta_ahl']*np.power(GREENi*par['K_ahl'],par['n_ahl']))/(1+np.power(GREENi*par['K_ahl'],par['n_ahl']))
+    AHL = AHL +par['leak_ahl']
+    AHL = AHL - par['delta_ahl']*(AHLi) #+ AHLei
+    AHL= AHL*stationary 
+
+    AHLdif = model_diffusion2D(AHLei,par,dxy) 
+    AHLe = AHLi + AHLdif -par['delta_ahle']*AHLei
+
+   # AHL= AHL +  
+
+    return GREEN,RED,AHL,AHLe
 
 #####################################################
 
@@ -338,6 +398,8 @@ def load(name,parlist):
 
 def run():
 	U0= np.ones((nx,ny))*0
+	Ue0= np.ones((nx,ny))*0
+
 	d0= np.ones((nx,ny))*0
 
 	R0= np.zeros((nx,ny)) 
@@ -349,10 +411,11 @@ def run():
 
 	C0[middle,middle]=1#0.01
 	G0[middle,middle]=100#0.01
+	U0[middle,middle]=0#0.01
+
 #	C0[middle-1:middle+2,middle]=1#0.01
 #	G0[middle-1:middle+2,middle]=100#0.01
-	d0=C0
-
+	d0=C0.copy()
 #	C0[middle+1,middle+1]=1#0.01
 #	R0[middle+1,middle+1]=100#0.01
 
@@ -391,45 +454,73 @@ def run():
 	#c,g,r=model_growth2(C0,G0,R0,par,dxy)
 	#print(r[:,middle])
 
-	U,d,C,G,R = Integration(C0,G0,R0,U0,d0,IPTG,par,totaltime=tt)
+	U,Ue,d,C,G,R = Integration(C0,G0,R0,U0,Ue0,d0,IPTG,par,totaltime=tt)
+	
+	#animateFig(C,'Greys','test.gif')#,min=0,max=100)
+	#animateFig(d,'viridis','test.gif',min=0,max=15)
+	#animateFig(R,'Reds','test.gif',min=0,max=50)
+	#animateFig(G,'Greens','test.gif')#,min=0,max=100)
+	#animateFig(G/R,'RdYlGn','stripe_stationary.gif',min=0,max=100)
 
-	plot_diffusion(C,U,d,G,R,step=6,totaltime=tt,dt=dt)
+
+	#animateFig(U,'Blues','test.gif')#,min=0,max=100)
+
+	plt.show()
+	
+#	plot_diffusion(C,U,d,G,R,step=6,totaltime=tt,dt=dt)
 #	plt.plot(np.ones(round(nx)),'black')
 	plt.plot(C[-2,:,middle],'m')
-	plt.plot(U[-2,:,middle],'b--')
+	plt.plot(U[-2,:,middle],'b-')
+	plt.plot(Ue[-2,:,middle],'b--')
+
 
 	plt.plot(R[-2,:,middle],'r')
 	plt.plot(G[-2,:,middle],'g')
 	plt.plot(d[-2,:,middle],'m--')
 
-
-
 	plt.yscale("log")
 	plt.show()
-
+	'''
 #	plt.plot(np.ones(round(tt/dt)),'black')
-	plt.plot(C[:-1,middle+1,middle],'m')
-	plt.plot(U[:-1,middle+1,middle],'b--')
-	plt.plot(d[:-1,middle+1,middle],'m--')
-	plt.plot(R[:-1,middle+1,middle],'r')
-	plt.plot(G[:-1,middle+1,middle],'g')
+	plt.plot(C[:-1,middle+0,middle],'m')
+	plt.plot(U[:-1,middle+0,middle],'b--')
+	plt.plot(d[:-1,middle+0,middle],'m--')
+	plt.plot(R[:-1,middle+0,middle],'r')
+	plt.plot(G[:-1,middle+0,middle],'g')
 	plt.yscale("log")
 	plt.show()
 
-	plt.plot(C[:-1,middle+8,middle],'m')
-	plt.plot(U[:-1,middle+8,middle],'b--')
-	plt.plot(d[:-1,middle+8,middle],'m--')
-	plt.plot(R[:-1,middle+8,middle],'r')
-	plt.plot(G[:-1,middle+8,middle],'g')
+	plt.plot(C[:-1,middle+4,middle],'m')
+	plt.plot(U[:-1,middle+4,middle],'b--')
+	plt.plot(d[:-1,middle+4,middle],'m--')
+	plt.plot(R[:-1,middle+4,middle],'r')
+	plt.plot(G[:-1,middle+4,middle],'g')
 	plt.yscale("log")
 	plt.show()
+	'''
+	plt.subplot(2,2,1)
+	sns.heatmap(G[:-1,middle:,middle],cmap='Greens',norm=LogNorm())
+	plt.subplot(2,2,2)
+	sns.heatmap(R[:-1,middle:,middle],cmap='Reds',norm=LogNorm())
+	#sns.heatmap(Ue[:-1,middle:,middle],cmap='Reds')#,norm=LogNorm())
+
+
+	plt.subplot(2,2,3)
+
+	sns.heatmap(d[:-1,middle:,middle],cmap='viridis',norm=LogNorm())
+	plt.subplot(2,2,4)
+	#U2[U2<10e-10]=0
+	sns.heatmap(U[:-1,middle:,middle],cmap='Blues')#,norm=LogNorm())
+
+	plt.show()
+
 
 #	animateFig(d,'viridis','AHL_grow_cell_stationary.gif',min=0,max=10)
 #	animateFig(U,'Blues','AHL_grow_stationary.gif')
-	animateFig(R,'Reds','R_oscillation.gif')#,min=0,max=100)
-	animateFig(G,'Greens','test.gif')#,min=0,max=100)
-	animateFig(U,'Blues','test.gif')#,min=0,max=100)
-	plt.show()
+#	animateFig(R,'Reds','R_oscillation.gif')#,min=0,max=100)
+#	animateFig(G,'Greens','test.gif')#,min=0,max=100)
+#	animateFig(U,'Blues','test.gif')#,min=0,max=100)
+
 
 
 
@@ -458,7 +549,7 @@ def animateFig(X,color,filename,min=None,max=None):
 		ims.append([im])
 	#print(ims)
 	ani = animation.ArtistAnimation(fig, ims, interval=1, blit=True)
-	#ani.save(filename, writer=animation.PillowWriter(fps=100))
+	#ani.save(filename, writer=animation.PillowWriter(fps=1000))
 	#plt.show()
 	#plt.close() 
 

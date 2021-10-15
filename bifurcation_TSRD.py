@@ -91,7 +91,6 @@ def jacobianMatrix2(ss,par):
 
    # A=A[:,None]
 
-
     #need to double check , some mistake are here
     dGdg = - par['delta_green'] *G/G
     dGdr = -((par['alpha_green'] - par['beta_green'])*np.power((par['K_ahl_green']*A),par['n_ahl_green'])*par['n_RED']*np.power((par['K_RED']*R),par['n_RED']))
