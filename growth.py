@@ -455,7 +455,14 @@ def run():
 	#print(r[:,middle])
 
 	U,Ue,d,C,G,R = Integration(C0,G0,R0,U0,Ue0,d0,IPTG,par,totaltime=tt)
-	
+	for t in np.arange(1,U.shape[0]):
+		sns.heatmap(C[t,:,:],cmap='Greys')
+		plt.savefig('cell/'+str(t)+'.png', bbox_inches='tight',dpi=300)
+		plt.close()
+		sns.heatmap(d[t,:,:],cmap='viridis',norm=LogNorm())
+		plt.savefig('density/'+str(t)+'.png', bbox_inches='tight',dpi=300)
+		plt.close()
+
 	#animateFig(C,'Greys','test.gif')#,min=0,max=100)
 	#animateFig(d,'viridis','test.gif',min=0,max=15)
 	#animateFig(R,'Reds','test.gif',min=0,max=50)
