@@ -285,7 +285,32 @@ def plotselectedparoverall(n,filename,parlist):
      par_plot2(pdf,pdf2,filename,'Y',parlist4,namelist4)
      
 
+def compare_plot(p,filename):
+            gg,gr,rg,rr=meq.Get_data()
+        #for pi in p:
+            pi=p[0]
+            GG,GR,GA,RG,RR,RA = meq.model(pi,100, 0.1)
+            for i in np.arange(0,6):
 
+                plt.subplot(6,4,1+i*4)
+                plt.plot(GG[-2,:,i],'b')
+                plt.plot(gg.to_numpy()[:,i],'-og')
+
+                plt.subplot(6,4,2+i*4)
+                plt.plot(GR[-2,:,i],'b')
+                plt.plot(gr.to_numpy()[:,i],'-or')
+
+                plt.subplot(6,4,3+i*4)
+                plt.plot(RG[-2,:,i],'b')          
+                plt.plot(rg.to_numpy()[:,i],'-og')
+
+                plt.subplot(6,4,4+i*4)
+                plt.plot(RR[-2,:,i],'b')
+                plt.plot(rr.to_numpy()[:,i],'-or')
+            plt.show()
+      #  plt.savefig(filename+"/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+
+   
 
 
 
@@ -301,10 +326,11 @@ if __name__ == "__main__":
     for i,par in enumerate(parlist):
         namelist.append(parlist[i]['name'])
     
+    n=["15"]
     for i in n:
-      p, pdf= load(i,filename,meq.parlist)
+        p, pdf= load(i,filename,meq.parlist)
     
      # plot(ARA,[p[0],p[250],p[500],p[750],p[999]],filename,i)
-      par_plot(pdf,filename,i,meq.parlist,namelist)
+     # par_plot(pdf,filename,i,meq.parlist,namelist)
+        compare_plot(p,filename)
 
-   

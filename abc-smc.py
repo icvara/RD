@@ -15,14 +15,14 @@ import time
 
 
 
-version="1"
-initdist=10000
+version="2"
+initdist=1000000000
 finaldist=0.1
 
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there
 
-pl= 16 #prior_label=
+pl= None #prior_label=
 #sys.path.insert(0, '/users/ibarbier/RD/'+version+'/')
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/RD/'+version)
 
