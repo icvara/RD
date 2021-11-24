@@ -151,11 +151,10 @@ def Integration(G0,R0,A0,IPTG,p,totaltime=500,dt=0.1):
 
 def distance(pars,totaltime=tt, dt=dtt):
     GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
-    d_green_1= np.sum(np.power(gg - GG[-2,:,:],2))
-    d_green_2= np.sum(np.power(gr - GR[-2,:,:],2))
-    d_red_1= np.sum(np.power(rg - RG[-2,:,:],2))
-    d_red_2= np.sum(np.power(rr - RR[-2,:,:],2))
-
+    d_green_1= np.nansum(np.power(gg.to_numpy() - GG[-2,:,:],2))
+    d_green_2= np.nansum(np.power(gr.to_numpy() - GR[-2,:,:],2))
+    d_red_1= np.nansum(np.power(rg.to_numpy() - RG[-2,:,:],2))
+    d_red_2= np.nansum(np.power(rr.to_numpy() - RR[-2,:,:],2))
     d_final= d_green_1 + d_green_2 + d_red_1 + d_red_2
 
     return d_final
@@ -209,6 +208,8 @@ AHL=gg.index.values
 IPTG=gg.columns.values
 init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
 init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]
+
+
 
 
 #print(gg-m_gg[-2])

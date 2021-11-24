@@ -16,7 +16,7 @@ import time
 
 
 version="1"
-initdist=10000
+initdist=1000000000000000000000
 finaldist=0.1
 
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
@@ -90,8 +90,8 @@ def GeneratePar( iter,
         np.random.seed()
         evaluated_distances = []
         d = eps_dist + 1 # original distance is beyond eps_dist
-        print(d)
         while d > eps_dist: # until a suitable parameter is found
+
             if previousparlist is None: # if is the first iteration
                 proposed_pars = sampleprior()
             else:
@@ -103,8 +103,8 @@ def GeneratePar( iter,
             if (evaluateprior(proposed_pars) > 0):
                 p = pars_to_dict(proposed_pars)
                 d = model_TSLT.distance(p)
+                print(d)
                 evaluated_distances.append(d)
-
         # Calculate weight
         if previousparlist is None:
             weight = 1
@@ -250,7 +250,7 @@ def main(argv):
     if os.path.isdir(version +'/smc') is False: ## if 'smc' folder does not exist:
         os.mkdir(version +'/smc') ## create it, the output will go there
         
-    Sequential_ABC( ncpus=1,initial_dist = initdist, final_dist =finaldist,prior_label = pl,Npars=1000, adaptative_kernel = False)
+    Sequential_ABC( ncpus=50,initial_dist = initdist, final_dist =finaldist,prior_label = pl,Npars=1000, adaptative_kernel = False)
 
 if __name__ == "__main__":
    main(sys.argv[1:])
