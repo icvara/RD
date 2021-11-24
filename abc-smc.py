@@ -16,13 +16,13 @@ import time
 
 
 version="1"
-initdist=1000000000000000000000
+initdist=10000
 finaldist=0.1
 
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there
 
-pl= None #prior_label=
+pl= 16 #prior_label=
 #sys.path.insert(0, '/users/ibarbier/RD/'+version+'/')
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/RD/'+version)
 
@@ -103,7 +103,6 @@ def GeneratePar( iter,
             if (evaluateprior(proposed_pars) > 0):
                 p = pars_to_dict(proposed_pars)
                 d = model_TSLT.distance(p)
-                print(d)
                 evaluated_distances.append(d)
         # Calculate weight
         if previousparlist is None:
@@ -250,7 +249,7 @@ def main(argv):
     if os.path.isdir(version +'/smc') is False: ## if 'smc' folder does not exist:
         os.mkdir(version +'/smc') ## create it, the output will go there
         
-    Sequential_ABC( ncpus=50,initial_dist = initdist, final_dist =finaldist,prior_label = pl,Npars=1000, adaptative_kernel = False)
+    Sequential_ABC( ncpus=40,initial_dist = initdist, final_dist =finaldist,prior_label = pl,Npars=1000, adaptative_kernel = False)
 
 if __name__ == "__main__":
    main(sys.argv[1:])
