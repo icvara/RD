@@ -29,7 +29,7 @@ parlist = [
 
     {'name':'alpha_green', 'lower_limit':0.0,'upper_limit':1000.0},
     {'name':'beta_green', 'lower_limit':100.0,'upper_limit':1000.0},
-    {'name':'K_GREEN', 'lower_limit':0.0,'upper_limit':100.0},
+    {'name':'K_GREEN', 'lower_limit':1.0,'upper_limit':100.0},
     {'name':'n_GREEN', 'lower_limit':1.0,'upper_limit':4.0},
     {'name':'delta_green', 'lower_limit':0.0,'upper_limit':1.0},
     {'name':'K_ahl_green', 'lower_limit':0.0,'upper_limit':100.0},
