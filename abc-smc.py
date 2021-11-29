@@ -15,7 +15,7 @@ import time
 
 
 
-version="1"
+version="2"
 initdist=1000000000
 finaldist=0.1
 
@@ -249,7 +249,7 @@ def main(argv):
     if os.path.isdir(version +'/smc') is False: ## if 'smc' folder does not exist:
         os.mkdir(version +'/smc') ## create it, the output will go there
         
-    Sequential_ABC( ncpus=40,initial_dist = initdist, final_dist =finaldist,prior_label = pl,Npars=1000, adaptative_kernel = False)
+    Sequential_ABC( ncpus=40,initial_dist = initdist, final_dist =finaldist,prior_label = pl,Npars=1000, adaptative_kernel = None)
 
 if __name__ == "__main__":
    main(sys.argv[1:])

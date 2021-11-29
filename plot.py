@@ -18,8 +18,8 @@ from functools import partial
 filename="1"
 
 
-n=['1','2','3','4','5','6','7','8','9','10']
-#n=['7']
+n=['10','20','25']
+n=['17']
 #
 #sys.path.insert(0, '/users/ibarbier/AC-DC/'+filename)
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/AC-DC/'+filename)
@@ -327,17 +327,12 @@ if __name__ == "__main__":
     
   #  n=["15"]
 
-'''
+
     for i in n:
         p, pdf= load(i,filename,meq.parlist)
     
      # plot(ARA,[p[0],p[250],p[500],p[750],p[999]],filename,i)
         par_plot(pdf,filename,i,meq.parlist,namelist)
         compare_plot(p,filename,i)
- '''      
 
-
-p, pdf= load("32",filename,meq.parlist)
-d=meq.distance(p[0])
-print(d)
 

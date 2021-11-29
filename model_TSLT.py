@@ -170,7 +170,7 @@ def distance(pars,totaltime=tt, dt=dtt):
 
 
 def model(pars,totaltime=tt, dt=dtt):
-    print(IPTG)
+
     #init green state
     Gi=np.ones((len(AHL),len(IPTG)))*init_GREEN[0]
     Ri=np.ones((len(AHL),len(IPTG)))*init_GREEN[1]
