@@ -26,6 +26,8 @@ parlist = [
     {'name':'delta_red', 'lower_limit':0.0,'upper_limit':1.0},
     {'name':'K_ahl_red', 'lower_limit':0.0,'upper_limit':100.0},
     {'name':'n_ahl_red', 'lower_limit':0.0,'upper_limit':4.0},
+    {'name':'cell_red', 'lower_limit':0.0,'upper_limit':500.0},
+
 
     {'name':'alpha_green', 'lower_limit':0.0,'upper_limit':1000.0},
     {'name':'beta_green', 'lower_limit':100.0,'upper_limit':1000.0},
@@ -34,7 +36,9 @@ parlist = [
     {'name':'delta_green', 'lower_limit':0.0,'upper_limit':1.0},
     {'name':'K_ahl_green', 'lower_limit':0.0,'upper_limit':100.0},
     {'name':'n_ahl_green', 'lower_limit':1.0,'upper_limit':4.0},
-    {'name':'K_IPTG', 'lower_limit':0.0,'upper_limit':100.0}#,
+    {'name':'K_IPTG', 'lower_limit':0.0,'upper_limit':100.0},
+    {'name':'cell_green', 'lower_limit':0.0,'upper_limit':500.0}
+
 
 #    {'name':'beta_ahl', 'lower_limit':0.0,'upper_limit':0.0},
 #    {'name':'K_ahl', 'lower_limit':0.0,'upper_limit':0.0},
@@ -72,8 +76,8 @@ def model_TSL(GREENi,REDi,AHLi,IPTG,par):
 def model_TSLT(GREENi,REDi,AHLi,IPTG,par):
 
     #here to calculate steady state:  we do without diffusion and cell density
-    #GREENi = np.maximum(GREENi - par['alpha_green'],0) # fluorescence background on X
-    #REDi = np.maximum(REDi - par['alpha_red'],0) # fluorescence background on X
+    GREENi = np.maximum(GREENi - par['cell_green'],0) # fluorescence background on X
+    REDi = np.maximum(REDi - par['cell_red'],0) # fluorescence background on X
 
     GREEN = (par['beta_green']*np.power(AHLi*par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*par['K_ahl_green'],par['n_ahl_green']))
     GREEN = GREEN[:,None] / (1 + np.power(REDi*par['K_RED'],par['n_RED']))
@@ -150,18 +154,23 @@ def Integration(G0,R0,A0,IPTG,p,totaltime=500,dt=0.1):
 
 def distance(pars,totaltime=tt, dt=dtt):
     GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
-    d_green_1= np.nansum(np.power(gg.to_numpy() - GG[-2,:,:],2))
-    d_green_2= np.nansum(np.power(gr.to_numpy() - GR[-2,:,:],2))
-    d_red_1= np.nansum(np.power(rg.to_numpy() - RG[-2,:,:],2))
-    d_red_2= np.nansum(np.power(rr.to_numpy() - RR[-2,:,:],2))
+
+    d_green_1= np.nansum(np.power(gg.to_numpy() - GG[-2,:,:],2))/(len(IPTG)*len(AHL))
+    d_green_2= np.nansum(np.power(gr.to_numpy() - GR[-2,:,:],2))/(len(IPTG)*len(AHL))
+    d_red_1= np.nansum(np.power(rg.to_numpy() - RG[-2,:,:],2))/(len(IPTG)*len(AHL))
+    d_red_2= np.nansum(np.power(rr.to_numpy() - RR[-2,:,:],2))/(len(IPTG)*len(AHL))
     d_final= d_green_1 + d_green_2 + d_red_1 + d_red_2
+    d_final=d_final/4
+
+
+
 
     return d_final
 
 
 
 def model(pars,totaltime=tt, dt=dtt):
-
+    print(IPTG)
     #init green state
     Gi=np.ones((len(AHL),len(IPTG)))*init_GREEN[0]
     Ri=np.ones((len(AHL),len(IPTG)))*init_GREEN[1]
@@ -207,6 +216,7 @@ AHL=gg.index.values
 IPTG=gg.columns.values
 init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
 init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]
+
 
 
 

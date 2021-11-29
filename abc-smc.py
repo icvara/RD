@@ -15,7 +15,7 @@ import time
 
 
 
-version="3"
+version="1"
 initdist=1000000000
 finaldist=0.1
 
