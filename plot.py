@@ -330,9 +330,65 @@ if __name__ == "__main__":
 
     for i in n:
         p, pdf= load(i,filename,meq.parlist)
+        print(p[0])
     
      # plot(ARA,[p[0],p[250],p[500],p[750],p[999]],filename,i)
         par_plot(pdf,filename,i,meq.parlist,namelist)
         compare_plot(p,filename,i)
 
+'''
 
+par= {
+    'alpha_red':0,# 138.863979279895275, 
+    'beta_red':700,# 407.7261352001707, 
+    'K_RED': 2.5,#100,#78.73962135928103, 
+    'n_RED': 2,#1.1845057822786513, 
+    'delta_red': 1,# 0.5959937643175113, 
+    'K_ahl_red':2,# 30,#80.06243465813735, 
+    'n_ahl_red': 2,# 0.23430630701321525, 
+    'cell_red': 400,#250.99780541044277,
+
+    'alpha_green': 0,#4.896872569660005, 
+    'beta_green': 700,#557.1408659872509, 
+    'K_GREEN':0, #1.3526978888600647, 
+    'n_GREEN': 2,#1.5340580791878207, 
+    'delta_green': 1,#0.5538095805884734, 
+    'K_ahl_green':5,# 100,#51.317680828927706, 
+    'n_ahl_green': 2,#1.7914661627738118, 
+    'K_IPTG': 100,#73.53867694816967, 
+    'cell_green': 400,#481.0642836426875
+}
+
+
+GG,GR,GA,RG,RR,RA = meq.model(par,50, 0.1)
+fig, axs = plt.subplots(6, 4)
+gg,gr,rg,rr=meq.Get_data()
+
+
+
+for i in np.arange(0,6):
+
+               # plt.subplot(6,4,1+i*4)
+               axs[i,0].plot(GG[-2,:,i],'b')
+               axs[i,0].plot(gg.to_numpy()[:,i],'-og')
+
+               # plt.subplot(6,4,2+i*4)
+               axs[i,1].plot(GR[-2,:,i],'b')
+               axs[i,1].plot(gr.to_numpy()[:,i],'-or')
+
+               # plt.subplot(6,4,3+i*4)
+               axs[i,2].plot(RG[-2,:,i],'b')          
+               axs[i,2].plot(rg.to_numpy()[:,i],'-og')
+               #plt.subplot(6,4,4+i*4)
+               axs[i,3].plot(RR[-2,:,i],'b')
+               axs[i,3].plot(rr.to_numpy()[:,i],'-or')
+
+plt.show()
+
+plt.plot(GG[:,5,5],'g')
+plt.plot(RG[:,5,5],'--g')
+plt.plot(GR[:,5,5],'r')
+plt.plot(RR[:,5,5],'--r')
+plt.show()
+
+'''

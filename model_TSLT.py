@@ -21,23 +21,23 @@ parlist = [
 
     {'name':'alpha_red', 'lower_limit':0.0,'upper_limit':1000.0},
     {'name':'beta_red', 'lower_limit':100.0,'upper_limit':1000.0},
-    {'name':'K_RED', 'lower_limit':0.0,'upper_limit':100.0},
+    {'name':'K_RED', 'lower_limit':-2.0,'upper_limit':5.0},
     {'name':'n_RED', 'lower_limit':1.0,'upper_limit':4.0},
     {'name':'delta_red', 'lower_limit':0.0,'upper_limit':1.0},
-    {'name':'K_ahl_red', 'lower_limit':0.0,'upper_limit':100.0},
+    {'name':'K_ahl_red', 'lower_limit':-2.0,'upper_limit':5.0},
     {'name':'n_ahl_red', 'lower_limit':0.0,'upper_limit':4.0},
-    {'name':'cell_red', 'lower_limit':0.0,'upper_limit':500.0},
+    {'name':'cell_red', 'lower_limit':0.0,'upper_limit':1000.0},
 
 
     {'name':'alpha_green', 'lower_limit':0.0,'upper_limit':1000.0},
     {'name':'beta_green', 'lower_limit':100.0,'upper_limit':1000.0},
-    {'name':'K_GREEN', 'lower_limit':1.0,'upper_limit':100.0},
+    {'name':'K_GREEN', 'lower_limit':-2.0,'upper_limit':5.0},
     {'name':'n_GREEN', 'lower_limit':1.0,'upper_limit':4.0},
     {'name':'delta_green', 'lower_limit':0.0,'upper_limit':1.0},
-    {'name':'K_ahl_green', 'lower_limit':0.0,'upper_limit':100.0},
+    {'name':'K_ahl_green', 'lower_limit':-2.0,'upper_limit':5.0},
     {'name':'n_ahl_green', 'lower_limit':1.0,'upper_limit':4.0},
-    {'name':'K_IPTG', 'lower_limit':0.0,'upper_limit':100.0},
-    {'name':'cell_green', 'lower_limit':0.0,'upper_limit':500.0}
+    {'name':'K_IPTG', 'lower_limit':-2.0,'upper_limit':5.0},
+    {'name':'cell_green', 'lower_limit':0.0,'upper_limit':1000.0}
 
 
 #    {'name':'beta_ahl', 'lower_limit':0.0,'upper_limit':0.0},
@@ -79,14 +79,14 @@ def model_TSLT(GREENi,REDi,AHLi,IPTG,par):
     GREENi = np.maximum(GREENi - par['cell_green'],0) # fluorescence background on X
     REDi = np.maximum(REDi - par['cell_red'],0) # fluorescence background on X
 
-    GREEN = (par['beta_green']*np.power(AHLi*par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*par['K_ahl_green'],par['n_ahl_green']))
-    GREEN = GREEN[:,None] / (1 + np.power(REDi*par['K_RED'],par['n_RED']))
+    GREEN = (par['beta_green']*np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))
+    GREEN = GREEN[:,None] / (1 + np.power(REDi*10**par['K_RED'],par['n_RED']))
     GREEN = GREEN - par['delta_green']*GREENi  + par['alpha_green']
 
-    free_GREENi= GREENi / ( 1+ par['K_IPTG']*IPTG)
+    free_GREENi= GREENi / ( 1+ 10**par['K_IPTG']*IPTG)
 
-    RED = (par['beta_red']*np.power(AHLi*par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*par['K_ahl_red'],par['n_ahl_red']))
-    RED = RED[:,None] / (1 + np.power(free_GREENi*par['K_GREEN'],par['n_GREEN']))
+    RED = (par['beta_red']*np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))
+    RED = RED[:,None] / (1 + np.power(free_GREENi*10**par['K_GREEN'],par['n_GREEN']))
     RED = RED - par['delta_red']*REDi + par['alpha_red']
 
     return GREEN,RED
@@ -131,7 +131,6 @@ def Integration(G0,R0,A0,IPTG,p,totaltime=500,dt=0.1):
 
     t=dt
     i=1
-
     while t < totaltime:
       #  g,r = model_TSL(Gi,Ri,U0,IPTG,p)
         g,r = model_TSLT(Gi,Ri,np.array(A0),np.array(IPTG),p)
