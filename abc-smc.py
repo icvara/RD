@@ -213,8 +213,7 @@ def Sequential_ABC( ncpus,
         #@EO: for testing, limit the number of iterations
         #if idistance == 3:
         #    last_round = True
-
-        
+       
         print("SMC step with target distance: {}".format(distance))
         pars,weights,accepted_distances,acceptance = GeneratePars( ncpus,
                                                                   previousparlist = pars,

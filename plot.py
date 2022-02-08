@@ -15,7 +15,7 @@ import time
 from functools import partial
 
 
-filename="1"
+filename="2"
 
 
 n=['10','20','25']
@@ -325,16 +325,82 @@ if __name__ == "__main__":
     for i,par in enumerate(parlist):
         namelist.append(parlist[i]['name'])
     
-  #  n=["15"]
+    #n=["25"]
 
 
     for i in n:
         p, pdf= load(i,filename,meq.parlist)
-        print(p[0])
-    
-     # plot(ARA,[p[0],p[250],p[500],p[750],p[999]],filename,i)
+        p0=p[0]
+
         par_plot(pdf,filename,i,meq.parlist,namelist)
         compare_plot(p,filename,i)
+        
+
+
+
+        '''
+        I=meq.IPTG
+        A=meq.AHL
+       # A=np.logspace(-5,1,1000)
+       # I=np.logspace(-2,0,10)
+
+
+       # p0['cell_green']=0
+       # p0['cell_red']=0
+        p0 = { 
+        'alpha_red':0.0001, 'beta_red': 400,
+        'K_RED': -1, 'n_RED': 4, 'delta_red': 1.0,
+         'K_ahl_red': 1.8, 'n_ahl_red': 2,
+          'cell_red': 0,
+          'alpha_green':90, 'beta_green':300,
+           'K_GREEN':-1, 'n_GREEN': 4,'delta_green': 1.0,
+            'K_ahl_green': 2.5, 'n_ahl_green': 2,
+         'K_IPTG': 3, 
+         'cell_green': 0 }
+        
+
+        ss=meq.findss(A,I,p0)
+
+       # print(ss)
+
+        d=meq.distance2(p0)
+        print(d)
+
+      
+
+        m=np.nanmax(ss[:,:,:,:],axis=2)
+
+        GG,GR,GA,RG,RR,RA = meq.model(p0,500, 0.1)
+
+        for ii,i in enumerate(I):
+            plt.subplot(5,2,ii+1)
+            for s,ls in enumerate(['-','--','-']) :
+                plt.plot(ss[:,ii,s,0],'g',linestyle=ls)
+
+                plt.plot(ss[:,ii,s,1],'r',linestyle=ls)
+            #plt.plot(m[:,ii,0],'g--')
+            #plt.plot(m[:,ii,1],'r--')
+            plt.plot(meq.gg.to_numpy()[:,ii]-300,'go')
+            plt.plot(meq.rg.to_numpy()[:,ii]-300,'go', mfc='none')
+            plt.ylim(0,500)
+            #plt.plot(RR[-2,:,ii],'ro')
+
+            #plt.plot(GG[-2,:,ii],'go')
+
+
+
+
+            #plt.yscale("log")
+        plt.show()
+
+    
+        '''
+
+
+       # print(p[0])
+    
+     # plot(ARA,[p[0],p[250],p[500],p[750],p[999]],filename,i)
+
 
 '''
 
