@@ -15,11 +15,11 @@ import time
 from functools import partial
 
 
-filename="2"
+filename="5"
 
 
-n=['10','20','25']
-n=['17']
+n=['10','20','30','35','40']
+#n=['22']
 #
 #sys.path.insert(0, '/users/ibarbier/AC-DC/'+filename)
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/AC-DC/'+filename)
@@ -155,7 +155,7 @@ def par_plot(df,name,nb,parlist,namelist):
                     plt.xticks(fontsize=fonts)
                     plt.yticks(fontsize=fonts,rotation=90)                 
     plt.savefig(name+"/plot/"+nb+'_par_plot.pdf', bbox_inches='tight')
-  #  plt.savefig(name+"/plot/par/"+nb+'_par_plot.png', bbox_inches='tight', dpi=300)
+    plt.savefig(name+"/plot/"+nb+'_par_plot.png', bbox_inches='tight', dpi=300)
 
     plt.close()
     #plt.show()

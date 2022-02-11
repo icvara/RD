@@ -75,6 +75,9 @@ def model_TSL(GREENi,REDi,AHLi,IPTG,par):
 '''
 def model_TSLT(GREENi,REDi,AHLi,IPTG,par):
 
+    par['delta_green']=1
+    par['delta_red']=1
+
     #here to calculate steady state:  we do without diffusion and cell density
  #   GREENi = np.maximum(GREENi - par['cell_green'],0) # fluorescence background on X
  #   REDi = np.maximum(REDi - par['cell_red'],0) # fluorescence background on X

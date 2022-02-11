@@ -15,7 +15,7 @@ import time
 
 
 
-version="2"
+version="5"
 initdist=1000000000
 finaldist=0.1
 
@@ -102,7 +102,7 @@ def GeneratePar( iter,
 #here
             if (evaluateprior(proposed_pars) > 0):
                 p = pars_to_dict(proposed_pars)
-                d = model_TSLT.distance(p)
+                d = model_TSLT.distance2(p)
                 evaluated_distances.append(d)
         # Calculate weight
         if previousparlist is None:
