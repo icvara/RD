@@ -309,6 +309,32 @@ def compare_plot(p,filename,nb):
             #plt.show()
         plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
+
+def compare_plot2(p,filename,nb):
+        gg,gr,rg,rr=meq.Get_data()
+        I=meq.IPTG
+        A=meq.AHL
+        fig, axs = plt.subplots(6, 4)
+        for pi in p:
+            ss=meq.findss(A,I,pi)
+            M=np.nanmax(ss[:,:,:,:],axis=2)
+            m=np.nanmin(ss[:,:,:,:],axis=2)
+            for ii,i in enumerate(I):
+                axs[ii,0].plot(M[:,ii,0],'b')
+                axs[ii,2].plot(M[:,ii,1],'b')    
+                axs[ii,1].plot(m[:,ii,0],'b')
+                axs[ii,3].plot(m[:,ii,1],'b')
+                axs[ii,0].plot(meq.gg.to_numpy()[:,ii],'go')
+                axs[ii,1].plot(meq.rg.to_numpy()[:,ii],'go', mfc='none')
+                axs[ii,2].plot(meq.rr.to_numpy()[:,ii],'ro')
+                axs[ii,3].plot(meq.gr.to_numpy()[:,ii],'ro', mfc='none')
+                axs[ii,0].set_ylim(ymin=-0.1,ymax=1.1)
+                axs[ii,1].set_ylim(ymin=-.1,ymax=1.1)
+                axs[ii,2].set_ylim(ymin=-.1,ymax=1.1)
+                axs[ii,3].set_ylim(ymin=-.1,ymax=1.1)
+        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+
+   
    
 
 
@@ -333,7 +359,7 @@ if __name__ == "__main__":
         p0=p[0]
 
         par_plot(pdf,filename,i,meq.parlist,namelist)
-        compare_plot(p,filename,i)
+        compare_plot2(p,filename,i)
         
 
 
@@ -341,120 +367,57 @@ if __name__ == "__main__":
         '''
         I=meq.IPTG
         A=meq.AHL
-       # A=np.logspace(-5,1,1000)
-       # I=np.logspace(-2,0,10)
+        #A=np.logspace(-5,1,1000)
+        #I=np.logspace(-2,0,10)
 
-
-       # p0['cell_green']=0
-       # p0['cell_red']=0
         p0 = { 
-        'alpha_red':0.0001, 'beta_red': 400,
-        'K_RED': -1, 'n_RED': 4, 'delta_red': 1.0,
-         'K_ahl_red': 1.8, 'n_ahl_red': 2,
+        'alpha_red':0.0001, 'beta_red': 1,
+        'K_RED': 1.2, 'n_RED': 4, 'delta_red': 1.0,
+         'K_ahl_red': 2.5, 'n_ahl_red': 2,
           'cell_red': 0,
-          'alpha_green':90, 'beta_green':300,
-           'K_GREEN':-1, 'n_GREEN': 4,'delta_green': 1.0,
+          'alpha_green':0.2001, 'beta_green':0.8,
+           'K_GREEN':1.5, 'n_GREEN': 4,'delta_green': 1.0,
             'K_ahl_green': 2.5, 'n_ahl_green': 2,
-         'K_IPTG': 3, 
+         'K_IPTG': 1.5, 
          'cell_green': 0 }
         
 
         ss=meq.findss(A,I,p0)
 
-       # print(ss)
-
         d=meq.distance2(p0)
         print(d)
-
-      
-
-        m=np.nanmax(ss[:,:,:,:],axis=2)
-
+        M=np.nanmax(ss[:,:,:,:],axis=2)
+        m=np.nanmin(ss[:,:,:,:],axis=2)
         GG,GR,GA,RG,RR,RA = meq.model(p0,500, 0.1)
 
+        fig, axs = plt.subplots(6, 4)
+
         for ii,i in enumerate(I):
-            plt.subplot(5,2,ii+1)
-            for s,ls in enumerate(['-','--','-']) :
-                plt.plot(ss[:,ii,s,0],'g',linestyle=ls)
+           # for s,ls in enumerate(['-','--','-']) :
 
-                plt.plot(ss[:,ii,s,1],'r',linestyle=ls)
-            #plt.plot(m[:,ii,0],'g--')
-            #plt.plot(m[:,ii,1],'r--')
-            plt.plot(meq.gg.to_numpy()[:,ii]-300,'go')
-            plt.plot(meq.rg.to_numpy()[:,ii]-300,'go', mfc='none')
-            plt.ylim(0,500)
-            #plt.plot(RR[-2,:,ii],'ro')
-
-            #plt.plot(GG[-2,:,ii],'go')
+            #    axs[ii,0].plot(ss[:,ii,s,0],'g',linestyle=ls)
+            #    axs[ii,1].plot(ss[:,ii,s,1],'r',linestyle=ls)
 
 
-
+            axs[ii,0].plot(M[:,ii,0],'b')
+            axs[ii,2].plot(M[:,ii,1],'b')    
+            axs[ii,1].plot(m[:,ii,0],'b')
+            axs[ii,3].plot(m[:,ii,1],'b')
+            axs[ii,0].plot(meq.gg.to_numpy()[:,ii],'go')
+            axs[ii,1].plot(meq.rg.to_numpy()[:,ii],'go', mfc='none')
+            axs[ii,2].plot(meq.rr.to_numpy()[:,ii],'ro')
+            axs[ii,3].plot(meq.gr.to_numpy()[:,ii],'ro', mfc='none')
+            axs[ii,0].set_ylim(ymin=-0.1,ymax=1.1)
+            axs[ii,1].set_ylim(ymin=-.1,ymax=1.1)
+            axs[ii,2].set_ylim(ymin=-.1,ymax=1.1)
+            axs[ii,3].set_ylim(ymin=-.1,ymax=1.1)
 
             #plt.yscale("log")
         plt.show()
 
-    
         '''
-
-
-       # print(p[0])
-    
-     # plot(ARA,[p[0],p[250],p[500],p[750],p[999]],filename,i)
-
-
-'''
-
-par= {
-    'alpha_red':0,# 138.863979279895275, 
-    'beta_red':700,# 407.7261352001707, 
-    'K_RED': 2.5,#100,#78.73962135928103, 
-    'n_RED': 2,#1.1845057822786513, 
-    'delta_red': 1,# 0.5959937643175113, 
-    'K_ahl_red':2,# 30,#80.06243465813735, 
-    'n_ahl_red': 2,# 0.23430630701321525, 
-    'cell_red': 400,#250.99780541044277,
-
-    'alpha_green': 0,#4.896872569660005, 
-    'beta_green': 700,#557.1408659872509, 
-    'K_GREEN':0, #1.3526978888600647, 
-    'n_GREEN': 2,#1.5340580791878207, 
-    'delta_green': 1,#0.5538095805884734, 
-    'K_ahl_green':5,# 100,#51.317680828927706, 
-    'n_ahl_green': 2,#1.7914661627738118, 
-    'K_IPTG': 100,#73.53867694816967, 
-    'cell_green': 400,#481.0642836426875
-}
-
-
-GG,GR,GA,RG,RR,RA = meq.model(par,50, 0.1)
-fig, axs = plt.subplots(6, 4)
-gg,gr,rg,rr=meq.Get_data()
+        
 
 
 
-for i in np.arange(0,6):
 
-               # plt.subplot(6,4,1+i*4)
-               axs[i,0].plot(GG[-2,:,i],'b')
-               axs[i,0].plot(gg.to_numpy()[:,i],'-og')
-
-               # plt.subplot(6,4,2+i*4)
-               axs[i,1].plot(GR[-2,:,i],'b')
-               axs[i,1].plot(gr.to_numpy()[:,i],'-or')
-
-               # plt.subplot(6,4,3+i*4)
-               axs[i,2].plot(RG[-2,:,i],'b')          
-               axs[i,2].plot(rg.to_numpy()[:,i],'-og')
-               #plt.subplot(6,4,4+i*4)
-               axs[i,3].plot(RR[-2,:,i],'b')
-               axs[i,3].plot(rr.to_numpy()[:,i],'-or')
-
-plt.show()
-
-plt.plot(GG[:,5,5],'g')
-plt.plot(RG[:,5,5],'--g')
-plt.plot(GR[:,5,5],'r')
-plt.plot(RR[:,5,5],'--r')
-plt.show()
-
-'''

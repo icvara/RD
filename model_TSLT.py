@@ -16,7 +16,7 @@ dtt=0.1
 tt=120 #totaltime
 
 
-
+'''
 parlist = [
 
     {'name':'alpha_red', 'lower_limit':0.0,'upper_limit':10000.0},
@@ -46,9 +46,37 @@ parlist = [
 #    {'name':'delta_ahl', 'lower_limit':0.0,'upper_limit':0.0}
 
 ]
+'''
+
+parlist = [
+
+    {'name':'alpha_red', 'lower_limit':0.0001,'upper_limit':100.0},
+    {'name':'beta_red', 'lower_limit':0.0001,'upper_limit':100.0},
+    {'name':'K_RED', 'lower_limit':-5.0,'upper_limit':5.0},
+    {'name':'n_RED', 'lower_limit':1.0,'upper_limit':4.0},
+   # {'name':'delta_red', 'lower_limit':0.0,'upper_limit':1.0},
+    {'name':'K_ahl_red', 'lower_limit':-2.0,'upper_limit':5.0},
+    {'name':'n_ahl_red', 'lower_limit':0.0,'upper_limit':4.0},
+ #   {'name':'cell_red', 'lower_limit':0.0,'upper_limit':1000.0},
 
 
+    {'name':'alpha_green', 'lower_limit':0.0001,'upper_limit':100.0},
+    {'name':'beta_green', 'lower_limit':0.0001,'upper_limit':100.0},
+    {'name':'K_GREEN', 'lower_limit':-5.0,'upper_limit':5.0},
+    {'name':'n_GREEN', 'lower_limit':1.0,'upper_limit':4.0},
+   # {'name':'delta_green', 'lower_limit':0.0,'upper_limit':1.0},
+    {'name':'K_ahl_green', 'lower_limit':-2.0,'upper_limit':5.0},
+    {'name':'n_ahl_green', 'lower_limit':1.0,'upper_limit':4.0},
+    {'name':'K_IPTG', 'lower_limit':-2.0,'upper_limit':5.0}
+  #  {'name':'cell_green', 'lower_limit':0.0,'upper_limit':1000.0}
 
+
+#    {'name':'beta_ahl', 'lower_limit':0.0,'upper_limit':0.0},
+#    {'name':'K_ahl', 'lower_limit':0.0,'upper_limit':0.0},
+#    {'name':'n_ahl', 'lower_limit':0.0,'upper_limit':0.0},
+#    {'name':'delta_ahl', 'lower_limit':0.0,'upper_limit':0.0}
+
+]
 
 
 
@@ -181,7 +209,8 @@ def solvedfunction(Gi,A,I,par):
     #rewrite the system equation to have only one unknow and to be call with scipy.optimze.brentq
     #the output give a function where when the line reach 0 are a steady states
 
-   # Gii = np.maximum(Gi - par['cell_green'],0) # fluorescence background on X
+   # Gii = np.maximum(Gi - par    par['delta_green']=1
+   # par['delta_red']=1['cell_green'],0) # fluorescence background on X
 
     Gii=Gi
 
@@ -326,12 +355,17 @@ def distance2(pars):
     pars['delta_red']=1
     ss= findss(AHL,IPTG,pars)
 
-    m=np.nanmax(ss[:,:,:,:],axis=2)
+    M=np.nanmax(ss[:,:,:,:],axis=2)
+    m=np.nanmin(ss[:,:,:,:],axis=2)
 
-    d_green = np.nansum(np.power(gg.to_numpy() - m[:,:,0],2))/(len(IPTG)*len(AHL))
-    d_red = np.nansum(np.power(rr.to_numpy() - m[:,:,1],2))/(len(IPTG)*len(AHL))
 
-    d=(d_green+d_red)/2
+    d_green = np.nansum(np.power(gg.to_numpy() - M[:,:,0],2))/(len(IPTG)*len(AHL))
+    d_red = np.nansum(np.power(rr.to_numpy() - M[:,:,1],2))/(len(IPTG)*len(AHL))
+
+    d_green2 = np.nansum(np.power(rg.to_numpy() - m[:,:,0],2))/(len(IPTG)*len(AHL))
+    d_red2 = np.nansum(np.power(gr.to_numpy() - m[:,:,1],2))/(len(IPTG)*len(AHL))
+
+    d=(d_green+d_red+d_green2+d_red2)/4
 
 
     return d
@@ -359,20 +393,36 @@ def Get_data():
 
     return gg,gr,rg,rr
 
+def Get_data2():
+
+    path='data_percent.txt'
+    df = pd.read_csv(path,sep='\t' ,header=[0])
+    df[df == ' NA'] = np.nan
+
+    df_green=df[df["sample"] == "G"]
+    df_gg = df_green[df_green[" gate"] == ' G']
+    df_gr = df_green[df_green[" gate"] == ' R']
+
+    df_red=df[df["sample"] == "R"]
+    df_rg = df_red[df_red[" gate"] == ' G']
+    df_rr = df_red[df_red[" gate"] == ' R']
+
+    gg=df_gg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    gr=df_gr.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    rr=df_rr.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    rg=df_rg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    return gg,gr,rg,rr
+
+
 #############################################3
 
 
-gg,gr,rg,rr=Get_data()
+gg,gr,rg,rr=Get_data2()
 AHL=gg.index.values
 IPTG=gg.columns.values
 init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
 init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]
 
-
-
-
-
-#print(gg-m_gg[-2])
 
 '''
 plt.subplot(2,2,1)
