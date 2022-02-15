@@ -50,8 +50,8 @@ parlist = [
 
 parlist = [
 
-    {'name':'alpha_red', 'lower_limit':0.0001,'upper_limit':100.0},
-    {'name':'beta_red', 'lower_limit':0.0001,'upper_limit':100.0},
+    {'name':'alpha_red', 'lower_limit':-2.,'upper_limit':4.},
+    {'name':'beta_red', 'lower_limit':-2.,'upper_limit':4.},
     {'name':'K_RED', 'lower_limit':-5.0,'upper_limit':5.0},
     {'name':'n_RED', 'lower_limit':1.0,'upper_limit':4.0},
    # {'name':'delta_red', 'lower_limit':0.0,'upper_limit':1.0},
@@ -60,8 +60,8 @@ parlist = [
  #   {'name':'cell_red', 'lower_limit':0.0,'upper_limit':1000.0},
 
 
-    {'name':'alpha_green', 'lower_limit':0.0001,'upper_limit':100.0},
-    {'name':'beta_green', 'lower_limit':0.0001,'upper_limit':100.0},
+    {'name':'alpha_green', 'lower_limit':-2.,'upper_limit':4.0},
+    {'name':'beta_green', 'lower_limit':-2.,'upper_limit':4.0},
     {'name':'K_GREEN', 'lower_limit':-5.0,'upper_limit':5.0},
     {'name':'n_GREEN', 'lower_limit':1.0,'upper_limit':4.0},
    # {'name':'delta_green', 'lower_limit':0.0,'upper_limit':1.0},
@@ -110,15 +110,15 @@ def model_TSLT(GREENi,REDi,AHLi,IPTG,par):
  #   GREENi = np.maximum(GREENi - par['cell_green'],0) # fluorescence background on X
  #   REDi = np.maximum(REDi - par['cell_red'],0) # fluorescence background on X
 
-    GREEN = (par['beta_green']*np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))
+    GREEN = (10**par['beta_green']*np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))
     GREEN = GREEN[:,None] / (1 + np.power(REDi*10**par['K_RED'],par['n_RED']))
-    GREEN = GREEN - par['delta_green']*GREENi  + par['alpha_green']
+    GREEN = GREEN - par['delta_green']*GREENi  + 10**par['alpha_green']
 
     free_GREENi= GREENi / ( 1+ 10**par['K_IPTG']*IPTG)
 
-    RED = (par['beta_red']*np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))
+    RED = (10**par['beta_red']*np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))
     RED = RED[:,None] / (1 + np.power(free_GREENi*10**par['K_GREEN'],par['n_GREEN']))
-    RED = RED - par['delta_red']*REDi + par['alpha_red']
+    RED = RED - par['delta_red']*REDi + 10**par['alpha_red']
 
     return GREEN,RED
 '''
@@ -209,22 +209,23 @@ def solvedfunction(Gi,A,I,par):
     #rewrite the system equation to have only one unknow and to be call with scipy.optimze.brentq
     #the output give a function where when the line reach 0 are a steady states
 
-   # Gii = np.maximum(Gi - par    par['delta_green']=1
-   # par['delta_red']=1['cell_green'],0) # fluorescence background on X
+   # Gii = np.maximum(Gi - par ['cell_green'],0) # fluorescence background on X
+    par['delta_green']=1
+    par['delta_red']=1
 
     Gii=Gi
 
     Gf = Gii / ( 1+ 10**par['K_IPTG']*I)
 
-    R = (par['beta_red'])*np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])) 
+    R = (10**par['beta_red'])*np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])) 
     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))
-    R = ( R + par['alpha_red'] ) / par['delta_red']  
+    R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
  #   R = np.minimum(R + par['cell_red'],par['cell_red'])
    # R = np.maximum(R - par['cell_red'],0) # fluorescence background on X
 
-    G = (par['beta_green'])*np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
+    G = (10**par['beta_green'])*np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
     G = G / (1 + np.power(R*10**par['K_RED'],par['n_RED']))
-    G = (G + par['alpha_green']) / par['delta_green']
+    G = (G + 10**par['alpha_green']) / par['delta_green']
   #  G =  np.minimum(G + par['cell_green'],par['cell_green'])
 
    # G =G - np.maximum(Gi - par['cell_green'],0) # fluorescence background on X
@@ -259,9 +260,9 @@ def findss(A,I,par):
                 #now we have AHL we can find AHL2 ss
               #  Gii = np.maximum(G - par['cell_green'],0) # fluorescence background on X
                 Gf = G / ( 1+ 10**par['K_IPTG']*iptg)
-                R = (par['beta_red'])*np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
+                R = (10**par['beta_red'])*np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
                 R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))
-                R = ( R + par['alpha_red'] ) / par['delta_red']  
+                R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
                # R = np.minimum(R + par['cell_red'],par['cell_red'])
   
 
@@ -270,26 +271,6 @@ def findss(A,I,par):
                 ss[ai,iptgi,it]=np.array([G,R])
 
     return ss
-
-def ssmodel(GREENi,REDi,AHLi,IPTG,par):
-    #here to calculate steady state:  we do without diffusion and cell density
-
-    #here to calculate steady state:  we do without diffusion and cell density
-    GREENi = np.maximum(GREENi - par['cell_green'],0) # fluorescence background on X
-    REDi = np.maximum(REDi - par['cell_red'],0) # fluorescence background on X
-
-    GREEN = (par['beta_green']*np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))
-    GREEN = GREEN / (1 + np.power(REDi*10**par['K_RED'],par['n_RED']))
-    GREEN = GREEN - par['delta_green']*GREENi  + par['alpha_green']
-
-    free_GREENi= GREENi / ( 1+ 10**par['K_IPTG']*IPTG)
-
-    RED = (par['beta_red']*np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))
-    RED = RED / (1 + np.power(free_GREENi*10**par['K_GREEN'],par['n_GREEN']))
-    RED = RED - par['delta_red']*REDi + par['alpha_red']
-
-    return GREEN,RED
-
 
 
 
@@ -393,19 +374,19 @@ def Get_data():
 
     return gg,gr,rg,rr
 
-def Get_data2():
+def Get_data2(dataname):
 
-    path='data_percent.txt'
+    path=dataname
     df = pd.read_csv(path,sep='\t' ,header=[0])
     df[df == ' NA'] = np.nan
 
     df_green=df[df["sample"] == "G"]
-    df_gg = df_green[df_green[" gate"] == ' G']
-    df_gr = df_green[df_green[" gate"] == ' R']
+    df_gg = df_green[df_green.iloc[:,3] == ' GREEN']
+    df_gr = df_green[df_green.iloc[:,3] == ' RED']
 
     df_red=df[df["sample"] == "R"]
-    df_rg = df_red[df_red[" gate"] == ' G']
-    df_rr = df_red[df_red[" gate"] == ' R']
+    df_rg = df_red[df_red.iloc[:,3] == ' GREEN']
+    df_rr = df_red[df_red.iloc[:,3] == ' RED']
 
     gg=df_gg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
     gr=df_gr.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
@@ -417,11 +398,11 @@ def Get_data2():
 #############################################3
 
 
-gg,gr,rg,rr=Get_data2()
+gg,gr,rg,rr=Get_data2('data_percent.txt')
 AHL=gg.index.values
 IPTG=gg.columns.values
-init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
-init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]
+#init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
+#init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]
 
 
 '''

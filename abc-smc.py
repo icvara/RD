@@ -15,9 +15,9 @@ import time
 
 
 
-version="5"
-initdist=1000000000
-finaldist=0.1
+version="7_mean"#_percent_distancenomean"
+initdist=10000*6*8*4
+finaldist=0.00001
 
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there

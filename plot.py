@@ -15,11 +15,12 @@ import time
 from functools import partial
 
 
-filename="5"
+filename="7_percent_distancenomean"#percent_adaptative"#_distancenomean"
 
 
-n=['10','20','30','35','40']
-#n=['22']
+n=['5','10','20','30']#,'40','50']
+n=['100','150','175']
+n=['34']
 #
 #sys.path.insert(0, '/users/ibarbier/AC-DC/'+filename)
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/AC-DC/'+filename)
@@ -154,7 +155,7 @@ def par_plot(df,name,nb,parlist,namelist):
                     plt.xlabel(par1,fontsize=fonts)
                     plt.xticks(fontsize=fonts)
                     plt.yticks(fontsize=fonts,rotation=90)                 
-    plt.savefig(name+"/plot/"+nb+'_par_plot.pdf', bbox_inches='tight')
+    #plt.savefig(name+"/plot/"+nb+'_par_plot.pdf', bbox_inches='tight')
     plt.savefig(name+"/plot/"+nb+'_par_plot.png', bbox_inches='tight', dpi=300)
 
     plt.close()
@@ -311,7 +312,7 @@ def compare_plot(p,filename,nb):
 
 
 def compare_plot2(p,filename,nb):
-        gg,gr,rg,rr=meq.Get_data()
+        gg,gr,rg,rr=meq.Get_data2("data_percent.txt")
         I=meq.IPTG
         A=meq.AHL
         fig, axs = plt.subplots(6, 4)
