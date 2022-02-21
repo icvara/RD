@@ -14,6 +14,7 @@ from scipy.optimize import brentq
 
 dtt=0.1
 tt=120 #totaltime
+#datafile="data_percent.txt"
 
 
 '''
@@ -110,15 +111,19 @@ def model_TSLT(GREENi,REDi,AHLi,IPTG,par):
  #   GREENi = np.maximum(GREENi - par['cell_green'],0) # fluorescence background on X
  #   REDi = np.maximum(REDi - par['cell_red'],0) # fluorescence background on X
 
-    GREEN = (10**par['beta_green']*np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))
+    GREEN = (10**par['alpha_green']+10**par['beta_green']*np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))
+   # GREEN = (10**par['alpha_green']+10**par['beta_green']*np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(AHLi*10**par['K_ahl_green'],par['n_ahl_green']))
     GREEN = GREEN[:,None] / (1 + np.power(REDi*10**par['K_RED'],par['n_RED']))
-    GREEN = GREEN - par['delta_green']*GREENi  + 10**par['alpha_green']
+   # GREEN = GREEN - par['delta_green']*GREENi  + 10**par['alpha_green']
+    GREEN = GREEN - par['delta_green']*GREENi  
 
     free_GREENi= GREENi / ( 1+ 10**par['K_IPTG']*IPTG)
 
-    RED = (10**par['beta_red']*np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))
+    RED = (10**par['alpha_red'] + 10**par['beta_red']*np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))
+  #  RED = (10**par['beta_red']*np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(AHLi*10**par['K_ahl_red'],par['n_ahl_red']))
     RED = RED[:,None] / (1 + np.power(free_GREENi*10**par['K_GREEN'],par['n_GREEN']))
-    RED = RED - par['delta_red']*REDi + 10**par['alpha_red']
+    #RED = RED - par['delta_red']*REDi + 10**par['alpha_red']
+    RED = RED - par['delta_red']*REDi 
 
     return GREEN,RED
 '''
@@ -217,19 +222,22 @@ def solvedfunction(Gi,A,I,par):
 
     Gf = Gii / ( 1+ 10**par['K_IPTG']*I)
 
-    R = (10**par['beta_red'])*np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])) 
+    R = (10**par['alpha_red'] + 10**par['beta_red']*np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))
+    #R = (10**par['beta_red'])*np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])) 
     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))
-    R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
+  #  R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
+    R = ( R ) / par['delta_red'] 
  #   R = np.minimum(R + par['cell_red'],par['cell_red'])
    # R = np.maximum(R - par['cell_red'],0) # fluorescence background on X
 
-    G = (10**par['beta_green'])*np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
+    G = (10**par['alpha_green'] + 10**par['beta_green']*np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
+    #G = (10**par['beta_green'])*np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
     G = G / (1 + np.power(R*10**par['K_RED'],par['n_RED']))
-    G = (G + 10**par['alpha_green']) / par['delta_green']
-  #  G =  np.minimum(G + par['cell_green'],par['cell_green'])
+    G = (G ) / par['delta_green']
+    #G = (G + 10**par['alpha_green']) / par['delta_green']
+    #G =  np.minimum(G + par['cell_green'],par['cell_green'])
 
-   # G =G - np.maximum(Gi - par['cell_green'],0) # fluorescence background on X
-
+    #G =G - np.maximum(Gi - par['cell_green'],0) # fluorescence background on X
 
     func = G - Gi
 
@@ -260,9 +268,11 @@ def findss(A,I,par):
                 #now we have AHL we can find AHL2 ss
               #  Gii = np.maximum(G - par['cell_green'],0) # fluorescence background on X
                 Gf = G / ( 1+ 10**par['K_IPTG']*iptg)
-                R = (10**par['beta_red'])*np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
+                R = (10**par['alpha_red'] + 10**par['beta_red']*np.power(a*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
+                #R = (10**par['beta_red'])*np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
                 R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))
-                R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
+                #R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
+                R = ( R ) / par['delta_red'] 
                # R = np.minimum(R + par['cell_red'],par['cell_red'])
   
 
@@ -330,8 +340,12 @@ def distance(pars,totaltime=tt, dt=dtt):
 
 
 
-def distance2(pars):
+def distance2(pars,path):
+    
    # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
+    gg,gr,rg,rr=Get_data2(path)
+    AHL=gg.index.values
+    IPTG=gg.columns.values
     pars['delta_green']=1
     pars['delta_red']=1
     ss= findss(AHL,IPTG,pars)
@@ -353,8 +367,8 @@ def distance2(pars):
 
     
 
-def Get_data():
-    path='data.txt'
+def Get_data(path):
+    path=datafile
     df = pd.read_csv(path,sep='\t' ,header=[0])
     df[df == ' NA'] = np.nan
     sub_df=df[["sample"," AHL"," IPTG"," m_GREEN"," m_RED"]]
@@ -375,7 +389,6 @@ def Get_data():
     return gg,gr,rg,rr
 
 def Get_data2(dataname):
-
     path=dataname
     df = pd.read_csv(path,sep='\t' ,header=[0])
     df[df == ' NA'] = np.nan
@@ -398,9 +411,7 @@ def Get_data2(dataname):
 #############################################3
 
 
-gg,gr,rg,rr=Get_data2('data_percent.txt')
-AHL=gg.index.values
-IPTG=gg.columns.values
+
 #init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
 #init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]
 

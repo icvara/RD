@@ -15,14 +15,17 @@ import time
 
 
 
-version="7_mean"#_percent_distancenomean"
-initdist=10000*6*8*4
+version="8_mode"#_percent_distancenomean"
+datafile="data_mode.txt"
+
+
+initdist=1000000
 finaldist=0.00001
 
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there
 
-pl= None #prior_label=
+pl=  59 #prior_label=
 #sys.path.insert(0, '/users/ibarbier/RD/'+version+'/')
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/RD/'+version)
 
@@ -30,6 +33,8 @@ pl= None #prior_label=
 import model_TSLT
 
 parlist=model_TSLT.parlist
+
+
 #x_data= model_equation.ARA
 
 
@@ -102,7 +107,7 @@ def GeneratePar( iter,
 #here
             if (evaluateprior(proposed_pars) > 0):
                 p = pars_to_dict(proposed_pars)
-                d = model_TSLT.distance2(p)
+                d = model_TSLT.distance2(p,datafile)
                 evaluated_distances.append(d)
         # Calculate weight
         if previousparlist is None:

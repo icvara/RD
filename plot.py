@@ -15,12 +15,13 @@ import time
 from functools import partial
 
 
-filename="7_percent_distancenomean"#percent_adaptative"#_distancenomean"
+filename="8_mode"#percent_adaptative"#_distancenomean"
+datafile="data_mode.txt"
 
 
-n=['5','10','20','30']#,'40','50']
-n=['100','150','175']
-n=['34']
+n=['100','90','80','70','60']
+#n=['100','150','175']
+#n=['15']
 #
 #sys.path.insert(0, '/users/ibarbier/AC-DC/'+filename)
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/AC-DC/'+filename)
@@ -287,7 +288,7 @@ def plotselectedparoverall(n,filename,parlist):
      
 
 def compare_plot(p,filename,nb):
-        gg,gr,rg,rr=meq.Get_data()
+        gg,gr,rg,rr=meq.Get_data2(filename)
         fig, axs = plt.subplots(6, 4)
         for pi in p:
             GG,GR,GA,RG,RR,RA = meq.model(pi,100, 0.1)
@@ -311,28 +312,31 @@ def compare_plot(p,filename,nb):
         plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
 
-def compare_plot2(p,filename,nb):
-        gg,gr,rg,rr=meq.Get_data2("data_percent.txt")
-        I=meq.IPTG
-        A=meq.AHL
+def compare_plot2(p,filename,nb,datafile):
+        gg,gr,rg,rr=meq.Get_data2(datafile)
+        A=gg.index.values
+        I=gg.columns.values
+
+        maxi= np.max([ np.max(rr.to_numpy()),np.max(gg.to_numpy())])
+
         fig, axs = plt.subplots(6, 4)
         for pi in p:
             ss=meq.findss(A,I,pi)
             M=np.nanmax(ss[:,:,:,:],axis=2)
             m=np.nanmin(ss[:,:,:,:],axis=2)
             for ii,i in enumerate(I):
-                axs[ii,0].plot(M[:,ii,0],'b')
-                axs[ii,2].plot(M[:,ii,1],'b')    
-                axs[ii,1].plot(m[:,ii,0],'b')
-                axs[ii,3].plot(m[:,ii,1],'b')
-                axs[ii,0].plot(meq.gg.to_numpy()[:,ii],'go')
-                axs[ii,1].plot(meq.rg.to_numpy()[:,ii],'go', mfc='none')
-                axs[ii,2].plot(meq.rr.to_numpy()[:,ii],'ro')
-                axs[ii,3].plot(meq.gr.to_numpy()[:,ii],'ro', mfc='none')
-                axs[ii,0].set_ylim(ymin=-0.1,ymax=1.1)
-                axs[ii,1].set_ylim(ymin=-.1,ymax=1.1)
-                axs[ii,2].set_ylim(ymin=-.1,ymax=1.1)
-                axs[ii,3].set_ylim(ymin=-.1,ymax=1.1)
+                axs[ii,0].plot(M[:,ii,0],'b',linewidth=0.2)
+                axs[ii,2].plot(M[:,ii,1],'b',linewidth=0.2)    
+                axs[ii,1].plot(m[:,ii,0],'b',linewidth=0.2)
+                axs[ii,3].plot(m[:,ii,1],'b',linewidth=0.2)
+                axs[ii,0].plot(gg.to_numpy()[:,ii],'go', markersize=1.)
+                axs[ii,1].plot(rg.to_numpy()[:,ii],'go', markersize=1., mfc='none')
+                axs[ii,2].plot(rr.to_numpy()[:,ii],'ro', markersize=1.)
+                axs[ii,3].plot(gr.to_numpy()[:,ii],'ro', markersize=1., mfc='none')
+                axs[ii,0].set_ylim(ymin=-0.1,ymax=maxi+.1)
+                axs[ii,1].set_ylim(ymin=-0.1,ymax=maxi+.1)
+                axs[ii,2].set_ylim(ymin=-0.1,ymax=maxi+.1)
+                axs[ii,3].set_ylim(ymin=-0.1,ymax=maxi+.1)
         plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
    
@@ -356,16 +360,33 @@ if __name__ == "__main__":
 
 
     for i in n:
-        p, pdf= load(i,filename,meq.parlist)
-        p0=p[0]
 
+        p, pdf= load(i,filename,meq.parlist)
         par_plot(pdf,filename,i,meq.parlist,namelist)
-        compare_plot2(p,filename,i)
+        compare_plot2(p,filename,i,datafile)
         
 
+    p, pdf= load(n[0],filename,meq.parlist) 
+    p0=p[0]
+    A=np.logspace(-4,0,2000)
+    I=np.logspace(-2,0,25)
+    ss=meq.findss(A,I,p0)
 
 
-        '''
+    #fig, axs = plt.subplots(10, 2)
+
+    for ii,i in enumerate(I):
+      plt.subplot(5,5,(ii+1))
+      for s,ls in enumerate(['-','--','-']) :
+                
+                plt.plot(ss[:,ii,s,0],'g',linestyle=ls)
+               # axs[ii,1].plot(ss[:,ii,s,1],'r',linestyle=ls)
+    #  plt.ylim(ymin=-.1,ymax=1000.1)
+              #  axs[ii,1].set_ylim(ymin=-.1,ymax=1.1)
+
+
+    plt.savefig(filename+"/plot/"+n[0]+'_bifurcation_plot.png', bbox_inches='tight',dpi=300) 
+    '''
         I=meq.IPTG
         A=meq.AHL
         #A=np.logspace(-5,1,1000)
@@ -416,7 +437,7 @@ if __name__ == "__main__":
             #plt.yscale("log")
         plt.show()
 
-        '''
+    '''
         
 
 
