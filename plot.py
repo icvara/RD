@@ -15,11 +15,11 @@ import time
 from functools import partial
 
 
-filename="8_mode"#percent_adaptative"#_distancenomean"
-datafile="data_mode.txt"
+filename="8_percent"#percent_adaptative"#_distancenomean"
+datafile="data_percent.txt"
 
 
-n=['100','90','80','70','60']
+n=['54'] #,'90','80','70','60']
 #n=['100','150','175']
 #n=['15']
 #
@@ -341,7 +341,39 @@ def compare_plot2(p,filename,nb,datafile):
 
    
    
+def compare_plot_mode(p,filename,nb,datafile):
 
+    p_mode=pdf.mode(axis=0).to_dict(orient='index')[0]
+    name="mode_"+nb
+    compare_plot2([p_mode],filename,name,datafile)
+
+def bifu_heatmap(p_mode):
+    p0=p_mode
+
+    A=np.logspace(-4,1,40)
+    I=np.logspace(1,-4,40)
+
+    ss=meq.findss(A,I,p0)
+
+    
+    hyst_matrix = np.count_nonzero(~np.isnan(ss[:,:,:,0]),axis=2)
+    col_matrix = np.nanmax(ss[:,:,:,:],axis=2)
+
+   # hyst_matrix[hyst_matrix==1] = np.NaN
+    hyst_matrix = hyst_matrix.astype("float")
+    col_matrix = col_matrix.astype("float")
+
+   # col_matrix[col_matrix < .05] = np.NaN
+    #hyst_matrix[hyst_matrix==1] = np.NaN
+   # hyst_matrix[hyst_matrix==1] = np.NaN
+    plt.subplot(1,3,1)
+    sns.heatmap(col_matrix[:,:,1], cmap='Reds')
+    plt.subplot(1,3,2)
+    sns.heatmap(col_matrix[:,:,0], cmap='Greens')
+    plt.subplot(1,3,3)
+    sns.heatmap(hyst_matrix, cmap='Blues')
+    #plt.show()
+    plt.savefig(filename+"/plot/"+'bifurcation.png', bbox_inches='tight',dpi=300)
 
 
 ##############################################################################################################3   
@@ -362,30 +394,114 @@ if __name__ == "__main__":
     for i in n:
 
         p, pdf= load(i,filename,meq.parlist)
-        par_plot(pdf,filename,i,meq.parlist,namelist)
-        compare_plot2(p,filename,i,datafile)
+        #par_plot(pdf,filename,i,meq.parlist,namelist)
+        #compare_plot2(p,filename,i,datafile)
         
 
+
     p, pdf= load(n[0],filename,meq.parlist) 
-    p0=p[0]
-    A=np.logspace(-4,0,2000)
-    I=np.logspace(-2,0,25)
-    ss=meq.findss(A,I,p0)
+    #compare_plot_mode(p,filename,n[0],datafile)
 
 
-    #fig, axs = plt.subplots(10, 2)
 
-    for ii,i in enumerate(I):
-      plt.subplot(5,5,(ii+1))
-      for s,ls in enumerate(['-','--','-']) :
+
+    p_mode=pdf.mode(axis=0).to_dict(orient='index')[0]
+    #bifu_heatmap(p_mode)
+
+
+    '''
+    A=np.logspace(-4,1,100)
+    I=np.logspace(-1,0,15)
+
+    ss=meq.findss(A,I,p_mode)
+
+
+    fig, axs = plt.subplots(2, 15,figsize=(15, 2))#  constrained_layout = True)
+    for ii,i in enumerate(I) :
+        for s,ls in enumerate(['-','--','-']) :
                 
-                plt.plot(ss[:,ii,s,0],'g',linestyle=ls)
-               # axs[ii,1].plot(ss[:,ii,s,1],'r',linestyle=ls)
-    #  plt.ylim(ymin=-.1,ymax=1000.1)
-              #  axs[ii,1].set_ylim(ymin=-.1,ymax=1.1)
+            axs[1,ii].plot(ss[:,ii,s,1],'r',linestyle=ls)
+            axs[0,ii].plot(ss[:,ii,s,0],'g',linestyle=ls)
+
+        axs[1,ii].set_ylim(ymin=-.1,ymax=1.1)
+        axs[0,ii].set_ylim(ymin=-.1,ymax=1.1)
+
+   # plt.ylim(ymin=-.1,ymax=1.1)
+    #plt.subplot_tool()
+    plt.savefig(filename+"/plot/"+'bifurcation_zoom.png', bbox_inches='tight')
+
+    plt.show()
+
+    '''
 
 
-    plt.savefig(filename+"/plot/"+n[0]+'_bifurcation_plot.png', bbox_inches='tight',dpi=300) 
+        
+    A=np.logspace(-4,1,100)
+    I=np.logspace(-1,0,10)
+    PP = np.linspace(0.5,1.5,10)
+
+
+    ss=meq.findss(A,I,p_mode)
+    print(p_mode)
+    factor='K_IPTG'
+
+    fig, axs = plt.subplots(10, 10,figsize=(10, 10))#  constrained_layout = True)
+    for yy,y in enumerate(PP):
+        p_mode[factor]=y
+        ss=meq.findss(A,I,p_mode)
+        for ii,i in enumerate(I) :
+
+
+
+
+            for s,ls in enumerate(['-','--','-']) :
+                
+                    #axs[1,ii].plot(ss[:,ii,s,1],'r',linestyle=ls)
+                    axs[yy,ii].plot(ss[:,ii,s,0],'g',linestyle=ls)
+
+            axs[yy,ii].set_ylim(ymin=-.1,ymax=1.1)
+            axs[yy,ii].set_ylim(ymin=-.1,ymax=1.1)
+
+   # plt.ylim(ymin=-.1,ymax=1.1)
+    #plt.subplot_tool()
+    plt.savefig(filename+"/plot/"+factor+'_mushroom.png', bbox_inches='tight')
+
+    plt.show()
+
+    
+
+    I=np.logspace(-1,0,15)
+    ss=meq.findss(A,I,p_mode)
+
+
+    PP = np.linspace(1,3,5)
+    PP2 = [1]# np.linspace(-1.1,-0.5,10)
+
+    print(PP,PP2)
+
+
+    fig, axs = plt.subplots(20, 2)
+
+    for ii,i in enumerate(PP):
+        for yy,y in enumerate(PP2):
+
+            p0['K_ahl_red']=i
+            p0['alpha_red']=-0.5
+            p0['alpha_green']=-0.5
+
+
+            ss=meq.findss(A,I,p0)
+
+           # plt.subplot(5,5,(ii+1))
+            for s,ls in enumerate(['-','--','-']) :
+                
+                axs[ii,yy].plot(ss[:,0,s,0],'g',linestyle=ls)
+                axs[ii,yy].plot(ss[:,0,s,1],'r',linestyle=ls)
+           # plt.ylim(ymin=-.1,ymax=1.1)
+            axs[ii,yy].set_ylim(ymin=-.1,ymax=1.1)
+
+    plt.show()
+   # plt.savefig(filename+"/plot/"+n[0]+'_bifurcation_plot.png', bbox_inches='tight',dpi=300) 
     '''
         I=meq.IPTG
         A=meq.AHL
