@@ -107,7 +107,7 @@ def GeneratePar( iter,
 #here
             if (evaluateprior(proposed_pars) > 0):
                 p = pars_to_dict(proposed_pars)
-                d = model_TSLT.distance2(p,datafile)
+                d = model_TSLT.distance3(p,datafile) #change here to 2
                 evaluated_distances.append(d)
         # Calculate weight
         if previousparlist is None:
