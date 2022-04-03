@@ -15,11 +15,11 @@ import time
 from functools import partial
 
 
-filename="8_percent"#percent_adaptative"#_distancenomean"
-datafile="data_percent.txt"
+filename="8_mode"#percent_adaptative"#_distancenomean"
+datafile="data_median_gated.txt"
 
 
-n=['54'] #,'90','80','70','60']
+n=['100'] #,'90','80','70','60']
 #n=['100','150','175']
 #n=['15']
 #
@@ -406,36 +406,50 @@ if __name__ == "__main__":
 
 
     p_mode=pdf.mode(axis=0).to_dict(orient='index')[0]
+   # d=meq.distance3(p_mode,datafile)
     #bifu_heatmap(p_mode)
 
 
-    '''
-    A=np.logspace(-4,1,100)
+    '''   
+    A=np.logspace(-4,1,200)
     I=np.logspace(-1,0,15)
+    I=np.logspace(-.9,-0.3,15)
+    print(I)
 
+
+    factor='n_ahl_red'
+    print(p_mode)
+    y=0.5
+    p_mode[factor]=y
     ss=meq.findss(A,I,p_mode)
+
 
 
     fig, axs = plt.subplots(2, 15,figsize=(15, 2))#  constrained_layout = True)
     for ii,i in enumerate(I) :
-        for s,ls in enumerate(['-','--','-']) :
-                
-            axs[1,ii].plot(ss[:,ii,s,1],'r',linestyle=ls)
-            axs[0,ii].plot(ss[:,ii,s,0],'g',linestyle=ls)
+       # for s,ls in enumerate(['-','--','-']) :
+        for s,ls in enumerate(['bo','ro','bo']) :
+               
+            #axs[1,ii].plot(ss[:,ii,s,1],'r',linestyle=ls)
+            axs[1,ii].plot(ss[:,ii,s,1],ls,markersize=1)
+
+            #axs[0,ii].plot(ss[:,ii,s,0],'g',linestyle=ls)
+            axs[0,ii].plot(ss[:,ii,s,0],ls,markersize=1)
+
 
         axs[1,ii].set_ylim(ymin=-.1,ymax=1.1)
         axs[0,ii].set_ylim(ymin=-.1,ymax=1.1)
 
    # plt.ylim(ymin=-.1,ymax=1.1)
     #plt.subplot_tool()
-    plt.savefig(filename+"/plot/"+'bifurcation_zoom.png', bbox_inches='tight')
+   # plt.savefig(filename+"/plot/"+'bifurcation_zoom.png', bbox_inches='tight')
 
     plt.show()
 
-    '''
+    '''    
 
 
-        
+    '''    
     A=np.logspace(-4,1,100)
     I=np.logspace(-1,0,10)
     PP = np.linspace(0.5,1.5,10)
@@ -464,44 +478,42 @@ if __name__ == "__main__":
 
    # plt.ylim(ymin=-.1,ymax=1.1)
     #plt.subplot_tool()
-    plt.savefig(filename+"/plot/"+factor+'_mushroom.png', bbox_inches='tight')
+   # plt.savefig(filename+"/plot/"+factor+'_mushroom.png', bbox_inches='tight')
 
     plt.show()
-
+    '''
     
 
+    A=np.logspace(-4,1,1000)
     I=np.logspace(-1,0,15)
+    I=np.logspace(-.9,-0.3,25)
+
+
+    factor='n_ahl_red'
+    y=0.5
+   # p_mode[factor]=y
     ss=meq.findss(A,I,p_mode)
 
-
-    PP = np.linspace(1,3,5)
-    PP2 = [1]# np.linspace(-1.1,-0.5,10)
-
-    print(PP,PP2)
-
-
-    fig, axs = plt.subplots(20, 2)
-
-    for ii,i in enumerate(PP):
-        for yy,y in enumerate(PP2):
-
-            p0['K_ahl_red']=i
-            p0['alpha_red']=-0.5
-            p0['alpha_green']=-0.5
+    c=0
+    fig, axs = plt.subplots(5, 5,figsize=(20, 20))#  constrained_layout = True)
+    for ii in np.arange(5) :
+        for jj in np.arange(5) :
+            for s,ls in enumerate(['bo','ro','bo']) :
+                   
+                axs[ii,jj].plot(ss[:,c,s,0],ls,markersize=1)
+            c=c+1
 
 
-            ss=meq.findss(A,I,p0)
 
-           # plt.subplot(5,5,(ii+1))
-            for s,ls in enumerate(['-','--','-']) :
-                
-                axs[ii,yy].plot(ss[:,0,s,0],'g',linestyle=ls)
-                axs[ii,yy].plot(ss[:,0,s,1],'r',linestyle=ls)
-           # plt.ylim(ymin=-.1,ymax=1.1)
-            axs[ii,yy].set_ylim(ymin=-.1,ymax=1.1)
+            axs[ii,jj].set_ylim(ymin=-.1,ymax=1.1)
+
+   # plt.ylim(ymin=-.1,ymax=1.1)
+    #plt.subplot_tool()
+   # plt.savefig(filename+"/plot/"+'bifurcation_mushroom_zoom_now.png', bbox_inches='tight')
 
     plt.show()
-   # plt.savefig(filename+"/plot/"+n[0]+'_bifurcation_plot.png', bbox_inches='tight',dpi=300) 
+
+
     '''
         I=meq.IPTG
         A=meq.AHL

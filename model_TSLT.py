@@ -216,7 +216,7 @@ def solvedfunction(Gi,A,I,par):
 
    # Gii = np.maximum(Gi - par ['cell_green'],0) # fluorescence background on X
     par['delta_green']=1
-    par['delta_red']=1
+    par['delta_red']=1 #1.2
 
     Gii=Gi
 
@@ -365,7 +365,42 @@ def distance2(pars,path):
 
     return d
 
+def distance3(pars,path):
     
+   # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
+    Ggg,Ggr,Grg,Grr, Rgg,Rgr,Rrg,Rrr = Get_data3(path)
+
+   
+    #gate,fluo,sample
+    AHL=Ggg.index.values
+    IPTG=Ggg.columns.values
+    pars['delta_green']=1
+    pars['delta_red']=1
+    ss= findss(AHL,IPTG,pars)
+
+    M=np.nanmax(ss[:,:,:,:],axis=2)
+    m=np.nanmin(ss[:,:,:,:],axis=2)
+
+
+
+    d_green = np.nansum(np.power(Ggg.to_numpy() - M[:,:,0],2))/(len(IPTG)*len(AHL))
+    d_red = np.nansum(np.power(Rrr.to_numpy() - M[:,:,1],2))/(len(IPTG)*len(AHL))
+
+    d_green2 = np.nansum(np.power(Rgg.to_numpy() - m[:,:,0],2))/(len(IPTG)*len(AHL))
+    d_red2 = np.nansum(np.power(Grr.to_numpy() - m[:,:,1],2))/(len(IPTG)*len(AHL))
+
+
+    d_green3 = np.nansum(np.power(Grg.to_numpy() - m[:,:,0],2))/(len(IPTG)*len(AHL))
+    d_red3 = np.nansum(np.power(Ggr.to_numpy() - M[:,:,1],2))/(len(IPTG)*len(AHL))
+
+    d_green4 = np.nansum(np.power(Rrg.to_numpy() - M[:,:,0],2))/(len(IPTG)*len(AHL))
+    d_red4 = np.nansum(np.power(Rgr.to_numpy() - m[:,:,1],2))/(len(IPTG)*len(AHL))
+
+    d=(d_green+d_red+d_green2+d_red2+d_green3+d_red3+d_green4+d_red4)/4
+
+
+    return d
+   
 
 def Get_data(path):
     path=datafile
@@ -407,10 +442,50 @@ def Get_data2(dataname):
     rg=df_rg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
     return gg,gr,rg,rr
 
+def Get_data3(dataname):
+    path=dataname
+    df = pd.read_csv(path,sep='\t' ,header=[0])
+    df[df == ' NA'] = np.nan
+
+
+    df_G=df[df[" gate"] == 1]
+    df_greenG=df_G[df_G["sample"] == "G"]
+    df_Ggg = df_greenG[df_greenG.iloc[:,3] == ' GREEN']
+    df_Ggr = df_greenG[df_greenG.iloc[:,3] == ' RED']
+
+    df_redG=df_G[df_G["sample"] == "R"]
+    df_Grg = df_redG[df_redG.iloc[:,3] == ' GREEN']
+    df_Grr = df_redG[df_redG.iloc[:,3] == ' RED']
+
+
+    df_R=df[df[" gate"] == 2]
+    df_greenR=df_R[df_R["sample"] == "G"]
+    df_Rgg = df_greenR[df_greenR.iloc[:,3] == ' GREEN']
+    df_Rgr = df_greenR[df_greenR.iloc[:,3] == ' RED']
+
+    df_redR=df_R[df_R["sample"] == "R"]
+    df_Rrg = df_redR[df_redR.iloc[:,3] == ' GREEN']
+    df_Rrr = df_redR[df_redR.iloc[:,3] == ' RED']
+
+    Ggg=df_Ggg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    Ggr=df_Ggr.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    Grr=df_Grr.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    Grg=df_Grg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+
+    Rgg=df_Rgg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    Rgr=df_Rgr.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    Rrr=df_Rrr.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+    Rrg=df_Rrg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
+
+
+
+    return Ggg,Ggr,Grg,Grr, Rgg,Rgr,Rrg,Rrr
+
 
 #############################################3
 
 
+#print(Get_data3("data_median_gated.txt"))
 
 #init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
 #init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]

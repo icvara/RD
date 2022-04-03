@@ -15,8 +15,8 @@ import time
 
 
 
-version="8_mode"#_percent_distancenomean"
-datafile="data_mode.txt"
+version="8_median_gated"#_percent_distancenomean"
+datafile="data_median_gated.txt"
 
 
 initdist=1000000
