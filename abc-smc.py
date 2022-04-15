@@ -15,8 +15,8 @@ import time
 
 
 
-version="8_median_gated"#_percent_distancenomean"
-datafile="data_median_gated.txt"
+version="8_median_gated_minmax"#_percent_distancenomean"
+datafile="data_median_gated_maxmin.txt"
 
 
 initdist=1000000
@@ -107,7 +107,7 @@ def GeneratePar( iter,
 #here
             if (evaluateprior(proposed_pars) > 0):
                 p = pars_to_dict(proposed_pars)
-                d = model_TSLT.distance3(p,datafile) #change here to 2
+                d = model_TSLT.distance4(p,datafile) #change here to 2
                 evaluated_distances.append(d)
         # Calculate weight
         if previousparlist is None:

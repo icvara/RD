@@ -16,7 +16,7 @@ from functools import partial
 
 
 filename="8_median_gated"#percent_adaptative"#_distancenomean"
-datafile="data_median_gated.txt"
+datafile="data_median_gated_maxmin.txt"
 
 
 n=['28'] #,'90','80','70','60']
@@ -386,10 +386,57 @@ def compare_plot3(p,filename,nb,datafile):
                 axs[ii,2].plot(Mmindist[:,ii,1],'r',linewidth=0.2)    
                 axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
                 axs[ii,3].plot(mmindist[:,ii,1],'r',linewidth=0.2)      
+        plt.show()  
+        #plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+
+
+def compare_plot4(p,filename,nb,datafile):
+        gmin,gmax,rmin,rmax=meq.Get_data4(datafile)
+        A=gmin.index.values
+        I=gmin.columns.values
+
+        maxi= np.nanmax([ np.nanmax(rmax.to_numpy()),np.nanmax(gmax.to_numpy())])
+        mini= np.nanmin([ np.nanmin(rmin.to_numpy()),np.nanmin(gmin.to_numpy())])
+
+        fig, axs = plt.subplots(6, 2)
+        ss=meq.findss(A,I,p[0])
+        Mmindist=np.nanmax(ss[:,:,:,:],axis=2)
+        mmindist=np.nanmin(ss[:,:,:,:],axis=2)
+        for pi in p:
+            ss=meq.findss(A,I,pi)
+            M=np.nanmax(ss[:,:,:,:],axis=2)
+            m=np.nanmin(ss[:,:,:,:],axis=2)
+            
+            for ii,i in enumerate(I):
+                axs[ii,0].plot(M[:,ii,0],'g',linewidth=0.2)
+                axs[ii,1].plot(M[:,ii,1],'r',linewidth=0.2)    
+                axs[ii,0].plot(m[:,ii,0],'g--',linewidth=0.2)
+                axs[ii,1].plot(m[:,ii,1],'r--',linewidth=0.2)
                 
-        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+
+                
+                axs[ii,0].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
+                axs[ii,1].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
+
+        for ii,i in enumerate(I):
+
+                axs[ii,0].plot(gmax.to_numpy()[:,ii],'go', markersize=4.)
+                axs[ii,0].plot(gmin.to_numpy()[:,ii],'go', markersize=4., mfc='none')
+
+                axs[ii,1].plot(rmax.to_numpy()[:,ii],'ro', markersize=4.)
+                axs[ii,1].plot(rmin.to_numpy()[:,ii],'ro', markersize=4., mfc='none')
+
+                '''
+                axs[ii,0].plot(Mmindist[:,ii,0],'r',linewidth=0.2)
+                axs[ii,0].plot(Mmindist[:,ii,1],'r',linewidth=0.2)    
+                axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
+                axs[ii,1].plot(mmindist[:,ii,1],'r',linewidth=0.2)  
+                '''    
+        plt.show()  
+        #plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
 
+   
    
    
 def compare_plot_mode(p,filename,nb,datafile):
@@ -447,7 +494,7 @@ if __name__ == "__main__":
         p, pdf= load(i,filename,meq.parlist)
         par_plot(pdf,filename,i,meq.parlist,namelist)
         #compare_plot2(p,filename,i,datafile)
-        compare_plot3(p,filename,i,datafile)
+        compare_plot4([p[0]],filename,i,datafile)
         
 
 
@@ -457,8 +504,9 @@ if __name__ == "__main__":
 
 
 
-    p_mode=pdf.mode(axis=0).to_dict(orient='index')[0]
-   # d=meq.distance3(p_mode,datafile)
+  #  p_mode=pdf.mode(axis=0).to_dict(orient='index')[0]
+  #  d=meq.distance4(p[0],datafile)
+  #  print(d)
     #bifu_heatmap(p_mode)
 
 
@@ -535,7 +583,7 @@ if __name__ == "__main__":
     plt.show()
     '''
     
-
+    '''
     A=np.logspace(-4,1,1000)
     I=np.logspace(-1,0,15)
     I=np.logspace(-.9,-0.3,25)
@@ -565,59 +613,8 @@ if __name__ == "__main__":
 
     plt.show()
 
-
     '''
-        I=meq.IPTG
-        A=meq.AHL
-        #A=np.logspace(-5,1,1000)
-        #I=np.logspace(-2,0,10)
-
-        p0 = { 
-        'alpha_red':0.0001, 'beta_red': 1,
-        'K_RED': 1.2, 'n_RED': 4, 'delta_red': 1.0,
-         'K_ahl_red': 2.5, 'n_ahl_red': 2,
-          'cell_red': 0,
-          'alpha_green':0.2001, 'beta_green':0.8,
-           'K_GREEN':1.5, 'n_GREEN': 4,'delta_green': 1.0,
-            'K_ahl_green': 2.5, 'n_ahl_green': 2,
-         'K_IPTG': 1.5, 
-         'cell_green': 0 }
-        
-
-        ss=meq.findss(A,I,p0)
-
-        d=meq.distance2(p0)
-        print(d)
-        M=np.nanmax(ss[:,:,:,:],axis=2)
-        m=np.nanmin(ss[:,:,:,:],axis=2)
-        GG,GR,GA,RG,RR,RA = meq.model(p0,500, 0.1)
-
-        fig, axs = plt.subplots(6, 4)
-
-        for ii,i in enumerate(I):
-           # for s,ls in enumerate(['-','--','-']) :
-
-            #    axs[ii,0].plot(ss[:,ii,s,0],'g',linestyle=ls)
-            #    axs[ii,1].plot(ss[:,ii,s,1],'r',linestyle=ls)
-
-
-            axs[ii,0].plot(M[:,ii,0],'b')
-            axs[ii,2].plot(M[:,ii,1],'b')    
-            axs[ii,1].plot(m[:,ii,0],'b')
-            axs[ii,3].plot(m[:,ii,1],'b')
-            axs[ii,0].plot(meq.gg.to_numpy()[:,ii],'go')
-            axs[ii,1].plot(meq.rg.to_numpy()[:,ii],'go', mfc='none')
-            axs[ii,2].plot(meq.rr.to_numpy()[:,ii],'ro')
-            axs[ii,3].plot(meq.gr.to_numpy()[:,ii],'ro', mfc='none')
-            axs[ii,0].set_ylim(ymin=-0.1,ymax=1.1)
-            axs[ii,1].set_ylim(ymin=-.1,ymax=1.1)
-            axs[ii,2].set_ylim(ymin=-.1,ymax=1.1)
-            axs[ii,3].set_ylim(ymin=-.1,ymax=1.1)
-
-            #plt.yscale("log")
-        plt.show()
-
-    '''
+    
         
 
 

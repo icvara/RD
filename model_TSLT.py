@@ -365,6 +365,29 @@ def distance2(pars,path):
 
     return d
 
+def distance4(pars,path):
+    
+   # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
+    gmin,gmax,rmin,rmax=Get_data4(path)
+    AHL=gmin.index.values
+    IPTG=gmin.columns.values
+    pars['delta_green']=1
+    pars['delta_red']=1
+    ss= findss(AHL,IPTG,pars)
+
+    M=np.nanmax(ss[:,:,:,:],axis=2)
+    m=np.nanmin(ss[:,:,:,:],axis=2)
+
+
+    d_green = np.nansum(np.power(gmax.to_numpy() - M[:,:,0],2)) / np.nanmax(gmax.to_numpy())
+    d_red = np.nansum(np.power(rmax.to_numpy() - M[:,:,1],2)) // np.nanmax(rmax.to_numpy())
+    d_green2 = np.nansum(np.power(gmin.to_numpy() - m[:,:,0],2)) / np.nanmax(gmax.to_numpy())
+    d_red2 = np.nansum(np.power(rmin.to_numpy() - m[:,:,1],2)) / np.nanmax(rmax.to_numpy())
+    d=(d_green+d_red+d_green2+d_red2)/4
+
+
+    return d
+
 def distance3(pars,path):
     
    # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
@@ -439,6 +462,25 @@ def Get_data2(dataname):
     rg=df_rg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
     return gg,gr,rg,rr
 
+def Get_data4(dataname):
+    path=dataname
+    df = pd.read_csv(path,sep='\t' ,header=[0])
+    df[df == ' NA'] = np.nan
+
+    df_green=df[df[" fluo"] == " GREEN"]
+    df_gmin = df_green[df_green.iloc[:,4] == ' minimun']
+    df_gmax = df_green[df_green.iloc[:,4] == ' maximun']
+
+    df_red=df[df[" fluo"] == " RED"]
+    df_rmin = df_red[df_red.iloc[:,4] == ' minimun']
+    df_rmax = df_red[df_red.iloc[:,4] == ' maximun']
+
+    gmin=df_gmin.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
+    gmax=df_gmax.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
+    rmin=df_rmin.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
+    rmax=df_rmax.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
+    return gmin,gmax,rmin,rmax
+
 def Get_data3(dataname):
     path=dataname
     df = pd.read_csv(path,sep='\t' ,header=[0])
@@ -482,7 +524,7 @@ def Get_data3(dataname):
 #############################################3
 
 
-#print(Get_data3("data_median_gated.txt"))
+#print(Get_data4("data_median_gated_maxmin.txt"))
 
 #init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
 #init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]
