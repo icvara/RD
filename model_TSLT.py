@@ -369,7 +369,6 @@ def distance3(pars,path):
     
    # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
     Ggg,Ggr,Grg,Grr, Rgg,Rgr,Rrg,Rrr = Get_data3(path)
-
    
     #gate,fluo,sample
     AHL=Ggg.index.values
@@ -381,8 +380,6 @@ def distance3(pars,path):
     M=np.nanmax(ss[:,:,:,:],axis=2)
     m=np.nanmin(ss[:,:,:,:],axis=2)
 
-
-
     d_green = np.nansum(np.power(Ggg.to_numpy() - M[:,:,0],2))/(len(IPTG)*len(AHL))
     d_red = np.nansum(np.power(Rrr.to_numpy() - M[:,:,1],2))/(len(IPTG)*len(AHL))
 
@@ -390,13 +387,13 @@ def distance3(pars,path):
     d_red2 = np.nansum(np.power(Grr.to_numpy() - m[:,:,1],2))/(len(IPTG)*len(AHL))
 
 
-    d_green3 = np.nansum(np.power(Grg.to_numpy() - m[:,:,0],2))/(len(IPTG)*len(AHL))
-    d_red3 = np.nansum(np.power(Ggr.to_numpy() - M[:,:,1],2))/(len(IPTG)*len(AHL))
+    d_green3 = np.nansum(np.power(Rrg.to_numpy() - m[:,:,0],2))/(len(IPTG)*len(AHL))
+    d_red3 = np.nansum(np.power(Rgr.to_numpy() - M[:,:,1],2))/(len(IPTG)*len(AHL))
 
-    d_green4 = np.nansum(np.power(Rrg.to_numpy() - M[:,:,0],2))/(len(IPTG)*len(AHL))
-    d_red4 = np.nansum(np.power(Rgr.to_numpy() - m[:,:,1],2))/(len(IPTG)*len(AHL))
+    d_green4 = np.nansum(np.power(Grg.to_numpy() - M[:,:,0],2))/(len(IPTG)*len(AHL))
+    d_red4 = np.nansum(np.power(Ggr.to_numpy() - m[:,:,1],2))/(len(IPTG)*len(AHL))
 
-    d=(d_green+d_red+d_green2+d_red2+d_green3+d_red3+d_green4+d_red4)/4
+    d=(d_green+d_red+d_green2+d_red2+d_green3+d_red3+d_green4+d_red4)/8
 
 
     return d

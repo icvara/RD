@@ -15,11 +15,11 @@ import time
 from functools import partial
 
 
-filename="8_mode"#percent_adaptative"#_distancenomean"
+filename="8_median_gated"#percent_adaptative"#_distancenomean"
 datafile="data_median_gated.txt"
 
 
-n=['100'] #,'90','80','70','60']
+n=['28'] #,'90','80','70','60']
 #n=['100','150','175']
 #n=['15']
 #
@@ -339,6 +339,57 @@ def compare_plot2(p,filename,nb,datafile):
                 axs[ii,3].set_ylim(ymin=-0.1,ymax=maxi+.1)
         plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
+
+def compare_plot3(p,filename,nb,datafile):
+        Ggg,Ggr,Grg,Grr,Rgg,Rgr,Rrg,Rrr=meq.Get_data3(datafile)
+        A=Ggg.index.values
+        I=Ggg.columns.values
+
+        maxi= np.nanmax([ np.nanmax(Rrr.to_numpy()),np.nanmax(Ggg.to_numpy())])
+        mini= np.nanmin([ np.nanmin(Grr.to_numpy()),np.nanmin(Rgg.to_numpy())])
+
+        fig, axs = plt.subplots(6, 4)
+        ss=meq.findss(A,I,p[0])
+        Mmindist=np.nanmax(ss[:,:,:,:],axis=2)
+        mmindist=np.nanmin(ss[:,:,:,:],axis=2)
+        for pi in p:
+            ss=meq.findss(A,I,pi)
+            M=np.nanmax(ss[:,:,:,:],axis=2)
+            m=np.nanmin(ss[:,:,:,:],axis=2)
+            
+            for ii,i in enumerate(I):
+                axs[ii,0].plot(M[:,ii,0],'b',linewidth=0.2)
+                axs[ii,2].plot(M[:,ii,1],'b',linewidth=0.2)    
+                axs[ii,1].plot(m[:,ii,0],'b',linewidth=0.2)
+                axs[ii,3].plot(m[:,ii,1],'b',linewidth=0.2)
+                
+                
+                
+                axs[ii,0].plot(Ggg.to_numpy()[:,ii],'go', markersize=1.)
+                axs[ii,0].plot(Grg.to_numpy()[:,ii],'go', markersize=1.)
+
+                axs[ii,1].plot(Rgg.to_numpy()[:,ii],'go', markersize=1.)
+                axs[ii,1].plot(Rrg.to_numpy()[:,ii],'go', markersize=1.)
+                
+                axs[ii,2].plot(Rrr.to_numpy()[:,ii],'ro', markersize=1.)
+                axs[ii,2].plot(Rgr.to_numpy()[:,ii],'ro', markersize=1.)                
+                
+                axs[ii,3].plot(Grr.to_numpy()[:,ii],'ro', markersize=1.)
+                axs[ii,3].plot(Ggr.to_numpy()[:,ii],'ro', markersize=1.) 
+                
+                axs[ii,0].set_ylim(ymin=mini-0.1,ymax=maxi+.1)
+                axs[ii,1].set_ylim(ymin=mini-0.1,ymax=maxi+.1)
+                axs[ii,2].set_ylim(ymin=mini-0.1,ymax=maxi+.1)
+                axs[ii,3].set_ylim(ymin=mini-0.1,ymax=maxi+.1)
+        for ii,i in enumerate(I):
+                axs[ii,0].plot(Mmindist[:,ii,0],'r',linewidth=0.2)
+                axs[ii,2].plot(Mmindist[:,ii,1],'r',linewidth=0.2)    
+                axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
+                axs[ii,3].plot(mmindist[:,ii,1],'r',linewidth=0.2)      
+                
+        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+
+
    
    
 def compare_plot_mode(p,filename,nb,datafile):
@@ -394,12 +445,13 @@ if __name__ == "__main__":
     for i in n:
 
         p, pdf= load(i,filename,meq.parlist)
-        #par_plot(pdf,filename,i,meq.parlist,namelist)
+        par_plot(pdf,filename,i,meq.parlist,namelist)
         #compare_plot2(p,filename,i,datafile)
+        compare_plot3(p,filename,i,datafile)
         
 
 
-    p, pdf= load(n[0],filename,meq.parlist) 
+   # p, pdf= load(n[0],filename,meq.parlist) 
     #compare_plot_mode(p,filename,n[0],datafile)
 
 

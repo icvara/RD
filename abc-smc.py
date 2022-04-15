@@ -25,7 +25,7 @@ finaldist=0.00001
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there
 
-pl=  59 #prior_label=
+pl=  None #prior_label=
 #sys.path.insert(0, '/users/ibarbier/RD/'+version+'/')
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/RD/'+version)
 
