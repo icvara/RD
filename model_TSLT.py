@@ -222,7 +222,7 @@ def solvedfunction(Gi,A,I,par):
 
     Gf = Gii / ( 1+ 10**par['K_IPTG']*I)
 
-    R = (10**par['alpha_red'] + 10**par['beta_red']*np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))
+    R = 10**par['alpha_red'] + ( 10**par['beta_red']*np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))
     #R = (10**par['beta_red'])*np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])) 
     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))
   #  R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
@@ -230,7 +230,7 @@ def solvedfunction(Gi,A,I,par):
  #   R = np.minimum(R + par['cell_red'],par['cell_red'])
    # R = np.maximum(R - par['cell_red'],0) # fluorescence background on X
 
-    G = (10**par['alpha_green'] + 10**par['beta_green']*np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
+    G = 10**par['alpha_green'] + ( 10**par['beta_green']*np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
     #G = (10**par['beta_green'])*np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
     G = G / (1 + np.power(R*10**par['K_RED'],par['n_RED']))
     G = (G ) / par['delta_green']
@@ -268,7 +268,7 @@ def findss(A,I,par):
                 #now we have AHL we can find AHL2 ss
               #  Gii = np.maximum(G - par['cell_green'],0) # fluorescence background on X
                 Gf = G / ( 1+ 10**par['K_IPTG']*iptg)
-                R = (10**par['alpha_red'] + 10**par['beta_red']*np.power(a*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
+                R = 10**par['alpha_red'] + ( 10**par['beta_red']*np.power(a*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
                 #R = (10**par['beta_red'])*np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
                 R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))
                 #R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
@@ -369,6 +369,7 @@ def distance4(pars,path):
     
    # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
     gmin,gmax,rmin,rmax=Get_data4(path)
+
     AHL=gmin.index.values
     IPTG=gmin.columns.values
     pars['delta_green']=1
@@ -379,11 +380,11 @@ def distance4(pars,path):
     m=np.nanmin(ss[:,:,:,:],axis=2)
 
 
-    d_green = np.nansum(np.power(gmax.to_numpy() - M[:,:,0],2))# / np.nanmax(gmax.to_numpy())**2/(len(IPTG)*len(AHL))
-    d_red = np.nansum(np.power(rmax.to_numpy() - M[:,:,1],2)) #/ np.nanmax(rmax.to_numpy())**2/(len(IPTG)*len(AHL))
-    d_green2 = np.nansum(np.power(gmin.to_numpy() - m[:,:,0],2))# / np.nanmax(gmax.to_numpy())**2/(len(IPTG)*len(AHL))
-    d_red2 = np.nansum(np.power(rmin.to_numpy() - m[:,:,1],2)) #/ np.nanmax(rmax.to_numpy())**2/(len(IPTG)*len(AHL))
-    d=(d_green+d_red+d_green2+d_red2)#/4
+    d_green = np.nansum(np.power(gmax.to_numpy() - M[:,:,0],2)) / np.nanmax(gmax.to_numpy())**2/(len(IPTG)*len(AHL))
+    d_red = np.nansum(np.power(rmax.to_numpy() - M[:,:,1],2)) / np.nanmax(rmax.to_numpy())**2/(len(IPTG)*len(AHL))
+    d_green2 = np.nansum(np.power(gmin.to_numpy() - m[:,:,0],2)) / np.nanmax(gmax.to_numpy())**2/(len(IPTG)*len(AHL))
+    d_red2 = np.nansum(np.power(rmin.to_numpy() - m[:,:,1],2)) / np.nanmax(rmax.to_numpy())**2/(len(IPTG)*len(AHL))
+    d=(d_green+d_red+d_green2+d_red2)/4
 
 
     return d
@@ -479,6 +480,14 @@ def Get_data4(dataname):
     gmax=df_gmax.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
     rmin=df_rmin.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
     rmax=df_rmax.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
+
+    auto_green=np.nanmin(gmin)
+    auto_red=np.nanmin(rmin)
+
+    gmin = gmin-auto_green
+    gmax= gmax-auto_green
+    rmin = rmin-auto_red
+    rmax= rmax-auto_red
     return gmin,gmax,rmin,rmax
 
 def Get_data3(dataname):

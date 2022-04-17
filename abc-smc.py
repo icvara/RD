@@ -15,11 +15,11 @@ import time
 
 
 
-version="8_median_gated_minmax_4"#_percent_distancenomean"
+version="9_median_gated_minmax"#_percent_distancenomean"
 datafile="data_median_gated_maxmin.txt"
 
 
-initdist=100000000
+initdist=10000
 finaldist=0.00001
 
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:

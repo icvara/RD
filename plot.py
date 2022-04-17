@@ -395,6 +395,8 @@ def compare_plot4(p,filename,nb,datafile):
         A=gmin.index.values
         I=gmin.columns.values
 
+
+
         maxi= np.nanmax([ np.nanmax(rmax.to_numpy()),np.nanmax(gmax.to_numpy())])
         mini= np.nanmin([ np.nanmin(rmin.to_numpy()),np.nanmin(gmin.to_numpy())])
 
@@ -415,11 +417,11 @@ def compare_plot4(p,filename,nb,datafile):
                 
 
                 
-                axs[ii,0].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
-                axs[ii,1].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
-                axs[ii,2].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
-                axs[ii,3].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
-
+                axs[ii,0].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
+                axs[ii,1].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
+                axs[ii,2].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
+                axs[ii,3].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
+                
         for ii,i in enumerate(I):
 
                 axs[ii,0].plot(gmax.to_numpy()[:,ii],'go', markersize=4.)
@@ -503,12 +505,34 @@ if __name__ == "__main__":
    # p, pdf= load(n[0],filename,meq.parlist) 
     #compare_plot_mode(p,filename,n[0],datafile)
 
+    '''
+    p, pdf= load(i,filename,meq.parlist)
+    p=p[0]
+    p['alpha_red']= 2.0#2.496783409731153
+    p[ 'beta_red']= 2.5#3.114471765921569
+    p[ 'K_ahl_red']= 2#-1.1621886779174828
+    p[ 'n_ahl_red']= 1# 0.27463516060617854
+    p[ 'alpha_green']= 2.2#2.72500158113845
+    p[  'beta_green']= 2.7# -0.8161096974564463
+    p[ 'K_ahl_green'] = 2.5#-1.555685369218159
+    p[ 'n_ahl_green'] =  1#3.4831414888659915
 
+    p[ 'K_RED'] = -1.99#-4.047529380939851
+    p[ 'n_RED'] = 4# 2.8230220470434815
+
+    p[ 'K_GREEN']= -1.20#-4.545681717524607
+    p[ 'n_GREEN' ]= 4# 2.2761084701257603
+
+    p[ 'K_IPTG'] = 2#4.207597662328212
+    print(p)
+    d=meq.distance4(p,datafile)
+    print(d)
+    compare_plot4([p],filename,i,datafile)
+    '''
 
 
   #  p_mode=pdf.mode(axis=0).to_dict(orient='index')[0]
-    d=meq.distance4(p[0],datafile)
-    print(d)
+
     #bifu_heatmap(p_mode)
 
 
