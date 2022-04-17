@@ -15,11 +15,11 @@ import time
 from functools import partial
 
 
-filename="8_median_gated"#percent_adaptative"#_distancenomean"
+filename="8_median_gated_minmax_2"#percent_adaptative"#_distancenomean"
 datafile="data_median_gated_maxmin.txt"
 
 
-n=['28'] #,'90','80','70','60']
+n=['15'] #,'90','80','70','60']
 #n=['100','150','175']
 #n=['15']
 #
@@ -398,7 +398,7 @@ def compare_plot4(p,filename,nb,datafile):
         maxi= np.nanmax([ np.nanmax(rmax.to_numpy()),np.nanmax(gmax.to_numpy())])
         mini= np.nanmin([ np.nanmin(rmin.to_numpy()),np.nanmin(gmin.to_numpy())])
 
-        fig, axs = plt.subplots(6, 2)
+        fig, axs = plt.subplots(6, 4)
         ss=meq.findss(A,I,p[0])
         Mmindist=np.nanmax(ss[:,:,:,:],axis=2)
         mmindist=np.nanmin(ss[:,:,:,:],axis=2)
@@ -408,23 +408,25 @@ def compare_plot4(p,filename,nb,datafile):
             m=np.nanmin(ss[:,:,:,:],axis=2)
             
             for ii,i in enumerate(I):
-                axs[ii,0].plot(M[:,ii,0],'g',linewidth=0.2)
-                axs[ii,1].plot(M[:,ii,1],'r',linewidth=0.2)    
-                axs[ii,0].plot(m[:,ii,0],'g--',linewidth=0.2)
-                axs[ii,1].plot(m[:,ii,1],'r--',linewidth=0.2)
+                axs[ii,0].plot(M[:,ii,0],'b',linewidth=0.2)
+                axs[ii,2].plot(M[:,ii,1],'b',linewidth=0.2)    
+                axs[ii,1].plot(m[:,ii,0],'b--',linewidth=0.2)
+                axs[ii,3].plot(m[:,ii,1],'b--',linewidth=0.2)
                 
 
                 
                 axs[ii,0].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
                 axs[ii,1].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
+                axs[ii,2].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
+                axs[ii,3].set_ylim(ymin=mini-0.2*mini,ymax=maxi+.2*maxi)
 
         for ii,i in enumerate(I):
 
                 axs[ii,0].plot(gmax.to_numpy()[:,ii],'go', markersize=4.)
-                axs[ii,0].plot(gmin.to_numpy()[:,ii],'go', markersize=4., mfc='none')
+                axs[ii,1].plot(gmin.to_numpy()[:,ii],'go', markersize=4., mfc='none')
 
-                axs[ii,1].plot(rmax.to_numpy()[:,ii],'ro', markersize=4.)
-                axs[ii,1].plot(rmin.to_numpy()[:,ii],'ro', markersize=4., mfc='none')
+                axs[ii,2].plot(rmax.to_numpy()[:,ii],'ro', markersize=4.)
+                axs[ii,3].plot(rmin.to_numpy()[:,ii],'ro', markersize=4., mfc='none')
 
                 '''
                 axs[ii,0].plot(Mmindist[:,ii,0],'r',linewidth=0.2)
@@ -432,8 +434,8 @@ def compare_plot4(p,filename,nb,datafile):
                 axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
                 axs[ii,1].plot(mmindist[:,ii,1],'r',linewidth=0.2)  
                 '''    
-        plt.show()  
-        #plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+        #plt.show()  
+        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
 
    
@@ -494,7 +496,7 @@ if __name__ == "__main__":
         p, pdf= load(i,filename,meq.parlist)
         par_plot(pdf,filename,i,meq.parlist,namelist)
         #compare_plot2(p,filename,i,datafile)
-        compare_plot4([p[0]],filename,i,datafile)
+        compare_plot4(p,filename,i,datafile)
         
 
 

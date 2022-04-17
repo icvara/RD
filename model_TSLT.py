@@ -53,20 +53,20 @@ parlist = [
 
     {'name':'alpha_red', 'lower_limit':-2.,'upper_limit':4.},
     {'name':'beta_red', 'lower_limit':-2.,'upper_limit':4.},
-    {'name':'K_RED', 'lower_limit':-5.0,'upper_limit':5.0},
+    {'name':'K_RED', 'lower_limit':-8.0,'upper_limit':2.0},
     {'name':'n_RED', 'lower_limit':1.0,'upper_limit':4.0},
    # {'name':'delta_red', 'lower_limit':0.0,'upper_limit':1.0},
-    {'name':'K_ahl_red', 'lower_limit':-2.0,'upper_limit':5.0},
+    {'name':'K_ahl_red', 'lower_limit':-5.0,'upper_limit':2.0},
     {'name':'n_ahl_red', 'lower_limit':0.0,'upper_limit':4.0},
  #   {'name':'cell_red', 'lower_limit':0.0,'upper_limit':1000.0},
 
 
     {'name':'alpha_green', 'lower_limit':-2.,'upper_limit':4.0},
     {'name':'beta_green', 'lower_limit':-2.,'upper_limit':4.0},
-    {'name':'K_GREEN', 'lower_limit':-5.0,'upper_limit':5.0},
+    {'name':'K_GREEN', 'lower_limit':-8.0,'upper_limit':2.0},
     {'name':'n_GREEN', 'lower_limit':1.0,'upper_limit':4.0},
    # {'name':'delta_green', 'lower_limit':0.0,'upper_limit':1.0},
-    {'name':'K_ahl_green', 'lower_limit':-2.0,'upper_limit':5.0},
+    {'name':'K_ahl_green', 'lower_limit':-5.0,'upper_limit':2.0},
     {'name':'n_ahl_green', 'lower_limit':1.0,'upper_limit':4.0},
     {'name':'K_IPTG', 'lower_limit':-2.0,'upper_limit':5.0}
   #  {'name':'cell_green', 'lower_limit':0.0,'upper_limit':1000.0}
