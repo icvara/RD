@@ -505,8 +505,8 @@ if __name__ == "__main__":
 
 
   #  p_mode=pdf.mode(axis=0).to_dict(orient='index')[0]
-  #  d=meq.distance4(p[0],datafile)
-  #  print(d)
+    d=meq.distance4(p[0],datafile)
+    print(d)
     #bifu_heatmap(p_mode)
 
 

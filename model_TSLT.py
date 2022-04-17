@@ -379,11 +379,11 @@ def distance4(pars,path):
     m=np.nanmin(ss[:,:,:,:],axis=2)
 
 
-    d_green = np.nansum(np.power(gmax.to_numpy() - M[:,:,0],2)) / np.nanmax(gmax.to_numpy())
-    d_red = np.nansum(np.power(rmax.to_numpy() - M[:,:,1],2)) // np.nanmax(rmax.to_numpy())
-    d_green2 = np.nansum(np.power(gmin.to_numpy() - m[:,:,0],2)) / np.nanmax(gmax.to_numpy())
-    d_red2 = np.nansum(np.power(rmin.to_numpy() - m[:,:,1],2)) / np.nanmax(rmax.to_numpy())
-    d=(d_green+d_red+d_green2+d_red2)/4
+    d_green = np.nansum(np.power(gmax.to_numpy() - M[:,:,0],2))# / np.nanmax(gmax.to_numpy())**2/(len(IPTG)*len(AHL))
+    d_red = np.nansum(np.power(rmax.to_numpy() - M[:,:,1],2)) #/ np.nanmax(rmax.to_numpy())**2/(len(IPTG)*len(AHL))
+    d_green2 = np.nansum(np.power(gmin.to_numpy() - m[:,:,0],2))# / np.nanmax(gmax.to_numpy())**2/(len(IPTG)*len(AHL))
+    d_red2 = np.nansum(np.power(rmin.to_numpy() - m[:,:,1],2)) #/ np.nanmax(rmax.to_numpy())**2/(len(IPTG)*len(AHL))
+    d=(d_green+d_red+d_green2+d_red2)#/4
 
 
     return d
@@ -468,12 +468,12 @@ def Get_data4(dataname):
     df[df == ' NA'] = np.nan
 
     df_green=df[df[" fluo"] == " GREEN"]
-    df_gmin = df_green[df_green.iloc[:,4] == ' minimun']
-    df_gmax = df_green[df_green.iloc[:,4] == ' maximun']
+    df_gmin = df_green[df_green.iloc[:,3] == ' minimun']
+    df_gmax = df_green[df_green.iloc[:,3] == ' maximun']
 
     df_red=df[df[" fluo"] == " RED"]
-    df_rmin = df_red[df_red.iloc[:,4] == ' minimun']
-    df_rmax = df_red[df_red.iloc[:,4] == ' maximun']
+    df_rmin = df_red[df_red.iloc[:,3] == ' minimun']
+    df_rmax = df_red[df_red.iloc[:,3] == ' maximun']
 
     gmin=df_gmin.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
     gmax=df_gmax.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
