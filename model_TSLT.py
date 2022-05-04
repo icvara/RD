@@ -380,7 +380,7 @@ def distance4(pars,path):
     
    # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
     #gmin,gmax,rmin,rmax=Get_data4(path,pars)
-    gmin,gmax,rmin,rmax=Get_data5(path)
+    gmin,gmax,rmin,rmax=Get_data4(path)
 
     AHL=gmin.index.values
     IPTG=gmin.columns.values
@@ -396,26 +396,42 @@ def distance4(pars,path):
     hystss= M[:,:,0]-m[:,:,0]
     d_hyst = np.sqrt(np.nansum(np.power(hyst -hystss,2)))# /(len(IPTG)*len(AHL))
     '''
+
     
     hyst= gmax.to_numpy()-gmin.to_numpy()
-    hyst[hyst<200]=0
+    hyst[hyst<100]=0
     hyst[hyst>1]=1
+
+
     
     hyst2= rmax.to_numpy()-rmin.to_numpy()
-    hyst2[hyst2<200]=0
+    hyst2[hyst2<100]=0
     hyst2[hyst2>1]=1
-    
+    hysttable=np.array([[0,   0,  0,  0,  0,  0],
+                        [0,   0,  0,  1,  1,  1],
+                        [0,   0,  1,  1,  1,  1],
+                        [0,   0,  1,  1,  1,  1],
+                        [0,   1,  1,  1,  1,  1],
+                        [0,   1,  1,  1,  0,  0],
+                        [1,   1,  1,  1,  0,  0],
+                        [1,   1,  1,  0,  0,  0] ] )
+
+                              
+                            
     hystss = np.count_nonzero(~np.isnan(ss[:,:,:,0]),axis=2)#(ss[:,:,:,:],axis=2)
     hystss[hystss<2]=0
     hystss[hystss>0]=1
+
     
     hystss2 = np.count_nonzero(~np.isnan(ss[:,:,:,1]),axis=2)#(ss[:,:,:,:],axis=2)
     hystss2[hystss2<2]=0
     hystss2[hystss2>0]=1
+
+
     
-    d_hyst =np.nansum(1000*np.power(hyst2-hystss2,2)) + np.nansum(1000*np.power(hyst-hystss,2))
+    d_hyst =np.nansum(1000*np.power(hysttable-hystss2,2)) + np.nansum(1000*np.power(hysttable-hystss,2))
  
-    
+
     #hystss2= M[:,:,1]-m[:,:,1]
     #d_hyst2 = np.sqrt(np.nansum(np.power(hyst2 -hystss2,2)))# /(len(IPTG)*len(AHL))
     
@@ -439,6 +455,7 @@ def distance4(pars,path):
     #d=(d_green+d_red+d_red2)
     
     #print(d_green,d_red,d_green2,d_red2,d_hyst,d_hyst2)
+    #print(d, d_hyst)
 
    # print(d_green)#,d_red,d_green2,d_red2,d_hyst,d_hyst2)
    # print(d_hyst)
@@ -521,10 +538,11 @@ def Get_data2(dataname):
     rg=df_rg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
     return gg,gr,rg,rr
 
-def Get_data4(dataname,par):
+def Get_data4(dataname):
     path=dataname
     df = pd.read_csv(path,sep='\t' ,header=[0])
     df[df == ' NA'] = np.nan
+
 
     df_green=df[df[" fluo"] == " GREEN"]
     df_gmin = df_green[df_green.iloc[:,3] == ' minimun']
@@ -533,6 +551,8 @@ def Get_data4(dataname,par):
     df_red=df[df[" fluo"] == " RED"]
     df_rmin = df_red[df_red.iloc[:,3] == ' minimun']
     df_rmax = df_red[df_red.iloc[:,3] == ' maximun']
+
+
 
     gmin=df_gmin.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
     gmax=df_gmax.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)

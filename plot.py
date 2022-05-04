@@ -15,11 +15,11 @@ import time
 from functools import partial
 
 
-filename="11_median_gated_minmax_hystv2"#percent_adaptative"#_distancenomean"
-datafile="data_median_gated_maxmin2.txt"
+filename="11_median_gated_minmax_hystv5"#percent_adaptative"#_distancenomean"
+datafile="data_median_gated_maxmin.txt"
 
 
-n=['22']
+n=['21']
 #n=['100','150','175']
 #n=['15']
 #
@@ -392,7 +392,7 @@ def compare_plot3(p,filename,nb,datafile):
 
 def compare_plot4(p,filename,nb,datafile):
        # gmin,gmax,rmin,rmax=meq.Get_data4(datafile,p[0])
-        gmin,gmax,rmin,rmax=meq.Get_data5(datafile)
+        gmin,gmax,rmin,rmax=meq.Get_data4(datafile)
         A=gmin.index.values
         I=gmin.columns.values
         maxi= np.nanmax([ np.nanmax(rmax.to_numpy()),np.nanmax(gmax.to_numpy())])
@@ -435,8 +435,8 @@ def compare_plot4(p,filename,nb,datafile):
                 axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
                 axs[ii,1].plot(mmindist[:,ii,1],'r',linewidth=0.2)  
                 '''    
-        #plt.show()  
-        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+        plt.show()  
+        #plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
 
    
@@ -495,13 +495,19 @@ if __name__ == "__main__":
     for i in n:
 
         p, pdf= load(i,filename,meq.parlist)
-        par_plot(pdf,filename,i,meq.parlist,namelist)
+        #par_plot(pdf,filename,i,meq.parlist,namelist)
         #compare_plot2(p,filename,i,datafile)
-        compare_plot4([p[24],p[499],p[974]],filename,i+"sub",datafile)
-        compare_plot4(p,filename,i,datafile)
+        compare_plot4([p[24],p[200]],filename,i+"sub",datafile)
+
+        #compare_plot4([p[24],p[499],p[974]],filename,i+"sub",datafile)
+        #compare_plot4(p,filename,i,datafile)
         
 
-    #d=meq.distance4(p[0],datafile)
+    d=meq.distance4(p[24],datafile)
+    print(d)
+    print("----------------------------------------")
+    d=meq.distance4(p[200],datafile)
+    print(d)
     
 
     '''
