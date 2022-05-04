@@ -15,11 +15,11 @@ import time
 from functools import partial
 
 
-filename="8_median_gated_minmax_2"#percent_adaptative"#_distancenomean"
-datafile="data_median_gated_maxmin.txt"
+filename="11_median_gated_minmax_hystv2"#percent_adaptative"#_distancenomean"
+datafile="data_median_gated_maxmin2.txt"
 
 
-n=['15'] #,'90','80','70','60']
+n=['22']
 #n=['100','150','175']
 #n=['15']
 #
@@ -391,44 +391,43 @@ def compare_plot3(p,filename,nb,datafile):
 
 
 def compare_plot4(p,filename,nb,datafile):
-        gmin,gmax,rmin,rmax=meq.Get_data4(datafile)
+       # gmin,gmax,rmin,rmax=meq.Get_data4(datafile,p[0])
+        gmin,gmax,rmin,rmax=meq.Get_data5(datafile)
         A=gmin.index.values
         I=gmin.columns.values
-
-
-
         maxi= np.nanmax([ np.nanmax(rmax.to_numpy()),np.nanmax(gmax.to_numpy())])
         mini= np.nanmin([ np.nanmin(rmin.to_numpy()),np.nanmin(gmin.to_numpy())])
 
-        fig, axs = plt.subplots(6, 4)
-        ss=meq.findss(A,I,p[0])
-        Mmindist=np.nanmax(ss[:,:,:,:],axis=2)
-        mmindist=np.nanmin(ss[:,:,:,:],axis=2)
+        fig, axs = plt.subplots(6, 2)
+#        ss=meq.findss(A,I,p[0])
+#     Mmindist=np.nanmax(ss[:,:,:,:],axis=2)
+#     mmindist=np.nanmin(ss[:,:,:,:],axis=2)
         for pi in p:
+            #gmin,gmax,rmin,rmax=meq.Get_data4(datafile,pi)
             ss=meq.findss(A,I,pi)
             M=np.nanmax(ss[:,:,:,:],axis=2)
             m=np.nanmin(ss[:,:,:,:],axis=2)
             
             for ii,i in enumerate(I):
-                axs[ii,0].plot(M[:,ii,0],'b',linewidth=0.2)
-                axs[ii,2].plot(M[:,ii,1],'b',linewidth=0.2)    
-                axs[ii,1].plot(m[:,ii,0],'b--',linewidth=0.2)
-                axs[ii,3].plot(m[:,ii,1],'b--',linewidth=0.2)
+                axs[ii,0].plot(M[:,ii,0],'g-',linewidth=0.4)
+                axs[ii,1].plot(M[:,ii,1],'r-',linewidth=0.4)    
+                axs[ii,0].plot(m[:,ii,0],'b--',linewidth=0.4)
+                axs[ii,1].plot(m[:,ii,1],'b--',linewidth=0.4)
                 
 
                 
                 axs[ii,0].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
                 axs[ii,1].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
-                axs[ii,2].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
-                axs[ii,3].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
-                
+               # axs[ii,0].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
+               # axs[ii,1].set_ylim(ymin=mini-0.15*mini,ymax=maxi+.15*maxi)
+               
         for ii,i in enumerate(I):
 
                 axs[ii,0].plot(gmax.to_numpy()[:,ii],'go', markersize=4.)
-                axs[ii,1].plot(gmin.to_numpy()[:,ii],'go', markersize=4., mfc='none')
+                axs[ii,0].plot(gmin.to_numpy()[:,ii],'go', markersize=4., mfc='none')
 
-                axs[ii,2].plot(rmax.to_numpy()[:,ii],'ro', markersize=4.)
-                axs[ii,3].plot(rmin.to_numpy()[:,ii],'ro', markersize=4., mfc='none')
+                axs[ii,1].plot(rmax.to_numpy()[:,ii],'ro', markersize=4.)
+                axs[ii,1].plot(rmin.to_numpy()[:,ii],'ro', markersize=4., mfc='none')
 
                 '''
                 axs[ii,0].plot(Mmindist[:,ii,0],'r',linewidth=0.2)
@@ -498,36 +497,37 @@ if __name__ == "__main__":
         p, pdf= load(i,filename,meq.parlist)
         par_plot(pdf,filename,i,meq.parlist,namelist)
         #compare_plot2(p,filename,i,datafile)
+        compare_plot4([p[24],p[499],p[974]],filename,i+"sub",datafile)
         compare_plot4(p,filename,i,datafile)
         
 
-
-   # p, pdf= load(n[0],filename,meq.parlist) 
-    #compare_plot_mode(p,filename,n[0],datafile)
+    #d=meq.distance4(p[0],datafile)
+    
 
     '''
     p, pdf= load(i,filename,meq.parlist)
     p=p[0]
-    p['alpha_red']= 2.0#2.496783409731153
-    p[ 'beta_red']= 2.5#3.114471765921569
+    p['alpha_red']= 100.0#2.496783409731153
+    p[ 'beta_red']= 500.05#3.114471765921569
+    p[ 'basal_red']= 270.05#3.114471765921569
     p[ 'K_ahl_red']= 2#-1.1621886779174828
     p[ 'n_ahl_red']= 1# 0.27463516060617854
-    p[ 'alpha_green']= 2.2#2.72500158113845
-    p[  'beta_green']= 2.7# -0.8161096974564463
+    p[ 'alpha_green']= 0.2#2.72500158113845
+    p[ 'basal_green']= 270.05#3.114471765921569
+    p[  'beta_green']= 500.7# -0.8161096974564463
     p[ 'K_ahl_green'] = 2.5#-1.555685369218159
     p[ 'n_ahl_green'] =  1#3.4831414888659915
 
-    p[ 'K_RED'] = -1.99#-4.047529380939851
-    p[ 'n_RED'] = 4# 2.8230220470434815
+    p[ 'K_RED'] = -1.#-4.047529380939851
+    p[ 'n_RED'] = 3.7# 2.8230220470434815
 
-    p[ 'K_GREEN']= -1.20#-4.545681717524607
+    p[ 'K_GREEN']= -1.#-4.545681717524607
     p[ 'n_GREEN' ]= 4# 2.2761084701257603
 
     p[ 'K_IPTG'] = 2#4.207597662328212
-    print(p)
     d=meq.distance4(p,datafile)
     print(d)
-    compare_plot4([p],filename,i,datafile)
+    compare_plot4([p],filename,"test",datafile)
     '''
 
 

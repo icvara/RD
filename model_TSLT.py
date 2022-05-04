@@ -51,23 +51,31 @@ parlist = [
 
 parlist = [
 
-    {'name':'alpha_red', 'lower_limit':-2.,'upper_limit':4.},
-    {'name':'beta_red', 'lower_limit':-2.,'upper_limit':4.},
-    {'name':'K_RED', 'lower_limit':-8.0,'upper_limit':2.0},
-    {'name':'n_RED', 'lower_limit':1.0,'upper_limit':4.0},
+    #{'name':'alpha_red', 'lower_limit':-2.,'upper_limit':4.},
+    #{'name':'basal_red', 'lower_limit':-2.,'upper_limit':4.},
+    #{'name':'beta_red', 'lower_limit':-2.,'upper_limit':4.},
+    {'name':'alpha_red', 'lower_limit':0.,'upper_limit':1000.},
+    {'name':'basal_red', 'lower_limit':0.,'upper_limit':500.},
+    {'name':'beta_red', 'lower_limit':0.,'upper_limit':1000.},
+    {'name':'K_RED', 'lower_limit':-8.0,'upper_limit':5.0},
+    {'name':'n_RED', 'lower_limit':0.0,'upper_limit':4.0},
    # {'name':'delta_red', 'lower_limit':0.0,'upper_limit':1.0},
-    {'name':'K_ahl_red', 'lower_limit':-5.0,'upper_limit':2.0},
+    {'name':'K_ahl_red', 'lower_limit':-5.0,'upper_limit':4.0},
     {'name':'n_ahl_red', 'lower_limit':0.0,'upper_limit':4.0},
  #   {'name':'cell_red', 'lower_limit':0.0,'upper_limit':1000.0},
 
 
-    {'name':'alpha_green', 'lower_limit':-2.,'upper_limit':4.0},
-    {'name':'beta_green', 'lower_limit':-2.,'upper_limit':4.0},
-    {'name':'K_GREEN', 'lower_limit':-8.0,'upper_limit':2.0},
-    {'name':'n_GREEN', 'lower_limit':1.0,'upper_limit':4.0},
+    #{'name':'alpha_green', 'lower_limit':-2.,'upper_limit':4.0},
+    #{'name':'basal_green', 'lower_limit':-2.,'upper_limit':4.},
+    #{'name':'beta_green', 'lower_limit':-2.,'upper_limit':4.0},
+    {'name':'alpha_green', 'lower_limit':0.,'upper_limit':1000.},
+    {'name':'basal_green', 'lower_limit':0.,'upper_limit':500.},
+    {'name':'beta_green', 'lower_limit':0.,'upper_limit':1000.},
+    {'name':'K_GREEN', 'lower_limit':-8.0,'upper_limit':5.0},
+    {'name':'n_GREEN', 'lower_limit':0.,'upper_limit':4.0},
    # {'name':'delta_green', 'lower_limit':0.0,'upper_limit':1.0},
-    {'name':'K_ahl_green', 'lower_limit':-5.0,'upper_limit':2.0},
-    {'name':'n_ahl_green', 'lower_limit':1.0,'upper_limit':4.0},
+    {'name':'K_ahl_green', 'lower_limit':-5.0,'upper_limit':4.0},
+    {'name':'n_ahl_green', 'lower_limit':.0,'upper_limit':4.0},
     {'name':'K_IPTG', 'lower_limit':-2.0,'upper_limit':5.0}
   #  {'name':'cell_green', 'lower_limit':0.0,'upper_limit':1000.0}
 
@@ -219,20 +227,21 @@ def solvedfunction(Gi,A,I,par):
     par['delta_red']=1 #1.2
 
     Gii=Gi
+    Gii = np.maximum(Gi - par['basal_green'],0)
 
     Gf = Gii / ( 1+ 10**par['K_IPTG']*I)
 
-    R = 10**par['alpha_red'] + ( 10**par['beta_red']*np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))
+    R = par['alpha_red'] + ( par['beta_red']*np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))
     #R = (10**par['beta_red'])*np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])) 
-    R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))
+    R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))  #+ 10**par['basal_red']
   #  R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
-    R = ( R ) / par['delta_red'] 
+    R = ( R ) / par['delta_red']  #################
  #   R = np.minimum(R + par['cell_red'],par['cell_red'])
    # R = np.maximum(R - par['cell_red'],0) # fluorescence background on X
-
-    G = 10**par['alpha_green'] + ( 10**par['beta_green']*np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
+    R=  np.maximum(R - par['basal_red'],0)
+    G = par['alpha_green'] + ( par['beta_green']*np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])) 
     #G = (10**par['beta_green'])*np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
-    G = G / (1 + np.power(R*10**par['K_RED'],par['n_RED']))
+    G = G / (1 + np.power(R*10**par['K_RED'],par['n_RED'])) #+ 10**par['basal_green']
     G = (G ) / par['delta_green']
     #G = (G + 10**par['alpha_green']) / par['delta_green']
     #G =  np.minimum(G + par['cell_green'],par['cell_green'])
@@ -267,18 +276,21 @@ def findss(A,I,par):
                 G = brentq(solvedfunction, Gi[i], Gi[i+1],args=(a,iptg,par)) #find the value of AHL at 0
                 #now we have AHL we can find AHL2 ss
               #  Gii = np.maximum(G - par['cell_green'],0) # fluorescence background on X
+                #Gii = np.maximum(Gi - par['basal_green'],0)
                 Gf = G / ( 1+ 10**par['K_IPTG']*iptg)
-                R = 10**par['alpha_red'] + ( 10**par['beta_red']*np.power(a*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
+                R = par['alpha_red'] + ( par['beta_red']*np.power(a*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
                 #R = (10**par['beta_red'])*np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
-                R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))
+                R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN'])) #+ 10**par['basal_red']
                 #R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
                 R = ( R ) / par['delta_red'] 
+                R=  np.maximum(R - par['basal_red'],0)
                # R = np.minimum(R + par['cell_red'],par['cell_red'])
   
 
        # ss.append(np.array([G,R,A]))
 
                 ss[ai,iptgi,it]=np.array([G,R])
+             #   ss[ai,iptgi,it]=np.array([G+par['basal_green'],R+par['basal_red']])
 
     return ss
 
@@ -301,7 +313,6 @@ def jacobianMatrix(G,R,A,I,par): #function nto finished
     dRdr = - par['delta_red']     
 
     A = np.array([[dGdg,dGdr],[dRdg,dRdr]])
-    
     return A
 
 
@@ -368,7 +379,8 @@ def distance2(pars,path):
 def distance4(pars,path):
     
    # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
-    gmin,gmax,rmin,rmax=Get_data4(path)
+    #gmin,gmax,rmin,rmax=Get_data4(path,pars)
+    gmin,gmax,rmin,rmax=Get_data5(path)
 
     AHL=gmin.index.values
     IPTG=gmin.columns.values
@@ -379,15 +391,60 @@ def distance4(pars,path):
     M=np.nanmax(ss[:,:,:,:],axis=2)
     m=np.nanmin(ss[:,:,:,:],axis=2)
 
+    '''
+    hyst= gmax.to_numpy()-gmin.to_numpy()
+    hystss= M[:,:,0]-m[:,:,0]
+    d_hyst = np.sqrt(np.nansum(np.power(hyst -hystss,2)))# /(len(IPTG)*len(AHL))
+    '''
+    
+    hyst= gmax.to_numpy()-gmin.to_numpy()
+    hyst[hyst<200]=0
+    hyst[hyst>1]=1
+    
+    hyst2= rmax.to_numpy()-rmin.to_numpy()
+    hyst2[hyst2<200]=0
+    hyst2[hyst2>1]=1
+    
+    hystss = np.count_nonzero(~np.isnan(ss[:,:,:,0]),axis=2)#(ss[:,:,:,:],axis=2)
+    hystss[hystss<2]=0
+    hystss[hystss>0]=1
+    
+    hystss2 = np.count_nonzero(~np.isnan(ss[:,:,:,1]),axis=2)#(ss[:,:,:,:],axis=2)
+    hystss2[hystss2<2]=0
+    hystss2[hystss2>0]=1
+    
+    d_hyst =np.nansum(1000*np.power(hyst2-hystss2,2)) + np.nansum(1000*np.power(hyst-hystss,2))
+ 
+    
+    #hystss2= M[:,:,1]-m[:,:,1]
+    #d_hyst2 = np.sqrt(np.nansum(np.power(hyst2 -hystss2,2)))# /(len(IPTG)*len(AHL))
+    
+    t=np.sqrt(np.power(gmax.to_numpy() - M[:,:,0],2))
+    #t[t<25]=t[t<25]*.1
+    d_green=np.nansum(t)# /(len(IPTG)*len(AHL))  
+    
+    t=np.sqrt(np.power(gmin.to_numpy() - m[:,:,0],2))
+    #t[t<25]=t[t<25]*.1
+    d_green2=np.nansum(t)# /(len(IPTG)*len(AHL))  
+    
+    t=np.sqrt(np.power(rmax.to_numpy() - M[:,:,1],2))
+    #t[t<25]=t[t<25]*.1
+    d_red=np.nansum(t)# /(len(IPTG)*len(AHL))  
+    
+    t=np.sqrt(np.power(rmin.to_numpy() - m[:,:,1],2))
+    #t[t<25]=t[t<25]*.1
+    d_red2=np.nansum(t)# /(len(IPTG)*len(AHL))  
+ 
+    d=(d_green+d_red+d_green2+d_red2)
+    #d=(d_green+d_red+d_red2)
+    
+    #print(d_green,d_red,d_green2,d_red2,d_hyst,d_hyst2)
 
-    d_green = np.nansum(np.power(gmax.to_numpy() - M[:,:,0],2)) / np.nanmax(gmax.to_numpy())**2/(len(IPTG)*len(AHL))
-    d_red = np.nansum(np.power(rmax.to_numpy() - M[:,:,1],2)) / np.nanmax(rmax.to_numpy())**2/(len(IPTG)*len(AHL))
-    d_green2 = np.nansum(np.power(gmin.to_numpy() - m[:,:,0],2)) / np.nanmax(gmax.to_numpy())**2/(len(IPTG)*len(AHL))
-    d_red2 = np.nansum(np.power(rmin.to_numpy() - m[:,:,1],2)) / np.nanmax(rmax.to_numpy())**2/(len(IPTG)*len(AHL))
-    d=(d_green+d_red+d_green2+d_red2)/4
-
-
-    return d
+   # print(d_green)#,d_red,d_green2,d_red2,d_hyst,d_hyst2)
+   # print(d_hyst)
+    return d +d_hyst # +4*(d_hyst+d_hyst2)
+    
+   
 
 def distance3(pars,path):
     
@@ -405,6 +462,7 @@ def distance3(pars,path):
     m=np.nanmin(ss[:,:,:,:],axis=2)
 
     d_green = np.nansum(np.power(Ggg.to_numpy() - M[:,:,0],2))/(len(IPTG)*len(AHL))
+    
     d_red = np.nansum(np.power(Rrr.to_numpy() - M[:,:,1],2))/(len(IPTG)*len(AHL))
 
     d_green2 = np.nansum(np.power(Rgg.to_numpy() - m[:,:,0],2))/(len(IPTG)*len(AHL))
@@ -463,7 +521,7 @@ def Get_data2(dataname):
     rg=df_rg.pivot(index=' AHL', columns=' IPTG', values=' mean').astype(float)
     return gg,gr,rg,rr
 
-def Get_data4(dataname):
+def Get_data4(dataname,par):
     path=dataname
     df = pd.read_csv(path,sep='\t' ,header=[0])
     df[df == ' NA'] = np.nan
@@ -481,13 +539,41 @@ def Get_data4(dataname):
     rmin=df_rmin.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
     rmax=df_rmax.pivot(index='AHL', columns=' IPTG', values=' median').astype(float)
 
-    auto_green=np.nanmin(gmin)
-    auto_red=np.nanmin(rmin)
+    '''
+    gmin = gmin-par['basal_green']
+    gmax= gmax-par['basal_green']
+    rmin = rmin-par['basal_red']
+    rmax= rmax-par['basal_red']
+    '''
+    return gmin,gmax,rmin,rmax
+    
+def Get_data5(dataname):
+    path=dataname
+    df = pd.read_csv(path,sep='\t' ,header=[0])
+    df[df == ' NA'] = np.nan
+    
+    
 
-    gmin = gmin-auto_green
-    gmax= gmax-auto_green
-    rmin = rmin-auto_red
-    rmax= rmax-auto_red
+    df_green=df[df[" fluo"] == " GREEN"]
+ 
+    df_gmin = df_green[df_green.iloc[:,0] == 'R']
+    df_gmax = df_green[df_green.iloc[:,0] == 'G']
+  
+    df_red=df[df[" fluo"] == " RED"]
+    df_rmin = df_red[df_red.iloc[:,0] == 'G']
+    df_rmax = df_red[df_red.iloc[:,0] == 'R']
+
+    gmin=df_gmin.pivot(index=' AHL', columns=' IPTG', values=' maximun').astype(float)
+    gmax=df_gmax.pivot(index=' AHL', columns=' IPTG', values=' maximun').astype(float)
+    rmin=df_rmin.pivot(index=' AHL', columns=' IPTG', values=' maximun').astype(float)
+    rmax=df_rmax.pivot(index=' AHL', columns=' IPTG', values=' maximun').astype(float)
+
+    '''
+    gmin = gmin-par['basal_green']
+    gmax= gmax-par['basal_green']
+    rmin = rmin-par['basal_red']
+    rmax= rmax-par['basal_red']
+    '''
     return gmin,gmax,rmin,rmax
 
 def Get_data3(dataname):
@@ -533,7 +619,7 @@ def Get_data3(dataname):
 #############################################3
 
 
-#print(Get_data4("data_median_gated_maxmin.txt"))
+#print(Get_data5("data_median_gated_maxmin2.txt"))
 
 #init_RED = [rg.iloc[7,5],rr.iloc[7,5],0]
 #init_GREEN= [gg.iloc[0,0],gr.iloc[0,0],0]

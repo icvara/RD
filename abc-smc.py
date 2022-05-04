@@ -15,17 +15,17 @@ import time
 
 
 
-version="9_median_gated_minmax"#_percent_distancenomean"
-datafile="data_median_gated_maxmin.txt"
+version="11_median_gated_minmax_hystv5"#_hyst"#_percent_distancenomean"
+datafile="data_median_gated_maxmin2.txt"
 
 
-initdist=10000
+initdist=1000000000
 finaldist=0.00001
 
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there
 
-pl=  None #prior_label=
+pl=  21 #prior_label=
 #sys.path.insert(0, '/users/ibarbier/RD/'+version+'/')
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/RD/'+version)
 
