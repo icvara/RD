@@ -12,11 +12,16 @@ import os
 import pandas as pd
 import multiprocessing
 import time
+import model
+import shutil
 
 
 
-version="13_minmax"#_hyst"#_percent_distancenomean"
-datafile="data_median_gated_maxmin.txt"
+version="FIT_TSLT_test"#_hyst"#_percent_distancenomean"
+data="data.txt"
+modeltype= "TSXLT" #TSLT TSXLT
+datafile = 'data/'+modeltype + '/' +data
+pl=  None
 
 
 initdist=1000000000
@@ -25,20 +30,15 @@ finaldist=0.00001
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there
 
-pl=  27 #prior_label=
-#sys.path.insert(0, '/users/ibarbier/RD/'+version+'/')
-#sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/RD/'+version)
+path='/users/ibarbier/RD/'
+path='C:/Users/Administrator/Desktop/Modeling/RD/'
+
+parlist=model.parlist
 
 
-import model_TSLT
-
-parlist=model_TSLT.parlist
-
-
-#x_data= model_equation.ARA
-
-
-
+original = path+'model.py'
+target = path + version+ '/model.py'
+shutil.copyfile(original, target)
 
 
 
@@ -107,7 +107,7 @@ def GeneratePar( iter,
 #here
             if (evaluateprior(proposed_pars) > 0):
                 p = pars_to_dict(proposed_pars)
-                d = model_TSLT.distance4(p,datafile) #change here to 2
+                d = model.distance(p,datafile,modeltype) #change here to 2
                 evaluated_distances.append(d)
         # Calculate weight
         if previousparlist is None:

@@ -90,7 +90,7 @@ parlist = [
 
 
 
-
+#first part on simualtion
 ########################################################
 '''
 def model_TSL(GREENi,REDi,AHLi,IPTG,par):
@@ -109,6 +109,7 @@ def model_TSL(GREENi,REDi,AHLi,IPTG,par):
     GREEN = GREEN - par['delta_green']*GREENi
    # GREEN = GREEN # + par['alpha_green']
     return GREEN,RED
+'''
 '''
 def model_TSLT(GREENi,REDi,AHLi,IPTG,par):
 
@@ -135,6 +136,7 @@ def model_TSLT(GREENi,REDi,AHLi,IPTG,par):
 
     return GREEN,RED
 '''
+'''
 def model_TSXLT(GREENi,REDi,AHLi,IPTG,par):
     #here to calculate steady state:  we do without diffusion and cell density
     GREENi = np.maximum(GREENi - par['alpha_green'],0) # fluorescence background on X
@@ -156,7 +158,7 @@ def model_TSXLT(GREENi,REDi,AHLi,IPTG,par):
     return GREEN,RED,AHL
 '''
 
-
+'''
 def Integration(G0,R0,A0,IPTG,p,totaltime=500,dt=0.1):   
     #U0 need to be of shape (totaltime,nx,ny)
     Gi=G0
@@ -180,8 +182,6 @@ def Integration(G0,R0,A0,IPTG,p,totaltime=500,dt=0.1):
         a=np.zeros((len(A0),len(IPTG)))
 
       # g,r,a = model_TSXLT(Gi,Ri,Ai,IPTG,p)
-
-
         Gi = Gi + g*dt
         Ri = Ri + r*dt
         Ai= Ai + a*dt 
@@ -210,7 +210,7 @@ def model(pars,totaltime=tt, dt=dtt):
 
     return GG,GR,GA,RG,RR,RA
 
-
+'''
 
 ################################3
 ### dynamic analysis
@@ -230,7 +230,6 @@ def solvedfunction(Gi,A,I,par):
     Gii = np.maximum(Gi - 10**par['basal_green'],0)
 
     Gf = Gii / ( 1+ 10**par['K_IPTG']*I)
-
     R = 10**par['alpha_red'] + ( 10**par['beta_red']*np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))
     #R = (10**par['beta_red'])*np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])) 
     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))  #+ 10**par['basal_red']
@@ -254,11 +253,9 @@ def solvedfunction(Gi,A,I,par):
 
 
 def findss(A,I,par):
-
     #list of fixed par
     #function to find steady state
     #1. find where line reached 0
-
     ss=[]
     nNode=2 # number of nodes : X,Y,Z
     nStstate= 5
@@ -286,12 +283,10 @@ def findss(A,I,par):
                 R=  np.maximum(R - 10**par['basal_red'],0)
                # R = np.minimum(R + par['cell_red'],par['cell_red'])
   
-
        # ss.append(np.array([G,R,A]))
 
                 ss[ai,iptgi,it]=np.array([G,R])
              #   ss[ai,iptgi,it]=np.array([G+par['basal_green'],R+par['basal_red']])
-
     return ss
 
 
