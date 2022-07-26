@@ -15,11 +15,11 @@ import time
 from functools import partial
 
 
-filename="11_median_gated_minmax_hystv5"#percent_adaptative"#_distancenomean"
+filename="13_minmax"#percent_adaptative"#_distancenomean"
 datafile="data_median_gated_maxmin.txt"
 
 
-n=['21']
+n=['27']#['20','15','10','5']#,'20','10']
 #n=['100','150','175']
 #n=['15']
 #
@@ -435,11 +435,100 @@ def compare_plot4(p,filename,nb,datafile):
                 axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
                 axs[ii,1].plot(mmindist[:,ii,1],'r',linewidth=0.2)  
                 '''    
-        plt.show()  
-        #plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+        #plt.show()  
+        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
 
-   
+def plot_distance(p,filename,nb,datafile):
+      gmin,gmax,rmin,rmax=meq.Get_data4(datafile)
+      A=gmin.index.values
+      I=gmin.columns.values
+      fig, axs = plt.subplots(6, 6)
+      dall=np.empty(shape=(len(p),6,len(A),len(I)))
+      print(dall.shape)
+      for index,pi in enumerate(p):
+          d=meq.distance4(pi,datafile,split=True)
+          dall[index]=d
+          
+          for ii,i in enumerate(I):
+                axs[ii,0].plot(d[0,:,ii],'g-',linewidth=0.4,alpha=0.1)
+                axs[ii,1].plot(d[1,:,ii],'g--',linewidth=0.4,alpha=0.1)
+                axs[ii,2].plot(d[2,:,ii],'b-',linewidth=0.4,alpha=0.1)
+                axs[ii,3].plot(d[3,:,ii],'r-',linewidth=0.4,alpha=0.1) 
+                axs[ii,4].plot(d[4,:,ii],'r--',linewidth=0.4,alpha=0.1)
+                axs[ii,5].plot(d[5,:,ii],'b-',linewidth=0.4,alpha=0.1)   
+
+          
+      plt.savefig(filename+"/plot/"+nb+'_test.png', bbox_inches='tight',dpi=300)
+        
+      fig, axs = plt.subplots(6, 6)
+      for ii,i in enumerate(I):
+                axs[ii,0].boxplot(dall[:,0,:,ii], showfliers=False)
+                axs[ii,1].boxplot(dall[:,1,:,ii], showfliers=False)
+                axs[ii,2].boxplot(dall[:,2,:,ii], showfliers=False)
+                axs[ii,3].boxplot(dall[:,3,:,ii], showfliers=False) 
+                axs[ii,4].boxplot(dall[:,4,:,ii], showfliers=False)
+                axs[ii,5].boxplot(dall[:,5,:,ii], showfliers=False)
+         
+               # axs[ii,0].set_yscale('log', base=10)
+              #  axs[ii,1].set_yscale('log', base=10)
+               # axs[ii,2].set_yscale('log', base=10)
+                #axs[ii,3].set_yscale('log', base=10)
+           
+                
+      plt.savefig(filename+"/plot/"+nb+'_test2.png', bbox_inches='tight',dpi=300)
+      
+def plot_distribution(p,filename,nb,datafile):
+      gmin,gmax,rmin,rmax=meq.Get_data4(datafile)
+      A=gmin.index.values
+      I=gmin.columns.values
+      fig, axs = plt.subplots(6, 2, figsize=(30,20))
+      #A=[0]
+      #I=[0]
+
+      
+      pTOT= np.empty(shape=5) * np.nan
+      #shape=(len(A),len(I),1000,2,2))   
+      i=0
+
+             # pTOT= np.empty(shape=(len(A),len(I),1000,2,2))   :
+      for index,pi in enumerate(p):
+              ss=meq.findss(A,I,pi)
+              M=np.nanmax(ss[:,:,:,:],axis=2)
+              m=np.nanmin(ss[:,:,:,:],axis=2)
+              for ai,a in enumerate(A):
+                  for ii,i in enumerate(I):
+                    pTOT= np.vstack([pTOT,np.array([a,i,"min",m[ai,ii,0],'G'])])
+                    pTOT= np.vstack([pTOT,np.array([a,i,"min",m[ai,ii,1],'R'])])
+                    pTOT= np.vstack([pTOT,np.array([a,i,"max",M[ai,ii,0],'G'])])
+                    pTOT= np.vstack([pTOT,np.array([a,i,"max",M[ai,ii,1],'R'])])
+                #pTOT[ai,ii,index,0]=M
+                #pTOT[ai,ii,index,1]=m
+
+      print(pTOT.shape)
+      df = pd.DataFrame(pTOT[1:], columns=['A','I','minmax','p','C'])
+      df.loc[:,'p']=df['p'].astype(float)
+      df.loc[:,'A']=df['A'].astype(float)
+      df.loc[:,'I']=df['I'].astype(float)
+
+      for ii,i in enumerate(I):
+      
+        for ci,c in enumerate(['G','R']):
+          subdf = df[(df["C"] == c) & (df["I"] == i)]
+          sns.violinplot(ax=axs[ii, ci],x='A', y='p', hue="minmax", data=subdf, palette="Set2", split=True, inner="quartile")  
+          axs[ii,ci].legend([],[], frameon=False) 
+          
+        axs[ii,0].plot(gmax.to_numpy()[:,ii],'-go', markersize=4.)
+        axs[ii,0].plot(gmin.to_numpy()[:,ii],'-go', markersize=4., mfc='none')
+        axs[ii,1].plot(rmax.to_numpy()[:,ii],'-ro', markersize=4.)
+        axs[ii,1].plot(rmin.to_numpy()[:,ii],'-ro', markersize=4., mfc='none')
+          
+           
+      plt.savefig(filename+"/plot/"+nb+'_distribution.png', bbox_inches='tight',dpi=300)
+     # sns.catplot(x='A', y='p', hue="minmax",col='C', row='I', data=df, kind="violin", palette="Set2", split=True) 
+     # plt.savefig(filename+"/plot/"+nb+'_testtest3.png', bbox_inches='tight',dpi=300)
+
+
    
    
 def compare_plot_mode(p,filename,nb,datafile):
@@ -491,24 +580,18 @@ if __name__ == "__main__":
     
     #n=["25"]
 
-
+    A=[10]#np.logspace(-4,1,200)
+    I=[10]#np.logspace(-1,0,15)
     for i in n:
 
         p, pdf= load(i,filename,meq.parlist)
-        #par_plot(pdf,filename,i,meq.parlist,namelist)
-        #compare_plot2(p,filename,i,datafile)
-        compare_plot4([p[24],p[200]],filename,i+"sub",datafile)
-
-        #compare_plot4([p[24],p[499],p[974]],filename,i+"sub",datafile)
-        #compare_plot4(p,filename,i,datafile)
+        
+        plot_distribution(p,filename,i,datafile)
+        par_plot(pdf,filename,i,meq.parlist,namelist)
+        compare_plot4([p[24],p[499],p[974]],filename,i+"sub",datafile)
+        compare_plot4(p,filename,i,datafile)
         
 
-    d=meq.distance4(p[24],datafile)
-    print(d)
-    print("----------------------------------------")
-    d=meq.distance4(p[200],datafile)
-    print(d)
-    
 
     '''
     p, pdf= load(i,filename,meq.parlist)

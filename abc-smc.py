@@ -15,7 +15,7 @@ import time
 
 
 
-version="12_minmax_hyst"#_hyst"#_percent_distancenomean"
+version="13_minmax"#_hyst"#_percent_distancenomean"
 datafile="data_median_gated_maxmin.txt"
 
 
@@ -25,7 +25,7 @@ finaldist=0.00001
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there
 
-pl=  None #prior_label=
+pl=  27 #prior_label=
 #sys.path.insert(0, '/users/ibarbier/RD/'+version+'/')
 #sys.path.insert(0, 'C:/Users/Administrator/Desktop/Modeling/RD/'+version)
 

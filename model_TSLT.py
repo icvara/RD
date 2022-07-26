@@ -54,9 +54,9 @@ parlist = [
     #{'name':'alpha_red', 'lower_limit':-2.,'upper_limit':4.},
     #{'name':'basal_red', 'lower_limit':-2.,'upper_limit':4.},
     #{'name':'beta_red', 'lower_limit':-2.,'upper_limit':4.},
-    {'name':'alpha_red', 'lower_limit':0.,'upper_limit':1000.},
-    {'name':'basal_red', 'lower_limit':0.,'upper_limit':500.},
-    {'name':'beta_red', 'lower_limit':0.,'upper_limit':1000.},
+    {'name':'alpha_red', 'lower_limit':0.,'upper_limit':5.},
+    {'name':'basal_red', 'lower_limit':-4.,'upper_limit':3.},
+    {'name':'beta_red', 'lower_limit':0.,'upper_limit':5.},
     {'name':'K_RED', 'lower_limit':-8.0,'upper_limit':5.0},
     {'name':'n_RED', 'lower_limit':0.0,'upper_limit':4.0},
    # {'name':'delta_red', 'lower_limit':0.0,'upper_limit':1.0},
@@ -68,9 +68,9 @@ parlist = [
     #{'name':'alpha_green', 'lower_limit':-2.,'upper_limit':4.0},
     #{'name':'basal_green', 'lower_limit':-2.,'upper_limit':4.},
     #{'name':'beta_green', 'lower_limit':-2.,'upper_limit':4.0},
-    {'name':'alpha_green', 'lower_limit':0.,'upper_limit':1000.},
-    {'name':'basal_green', 'lower_limit':0.,'upper_limit':500.},
-    {'name':'beta_green', 'lower_limit':0.,'upper_limit':1000.},
+    {'name':'alpha_green', 'lower_limit':-1.,'upper_limit':5.},
+    {'name':'basal_green', 'lower_limit':-4.,'upper_limit':3.},
+    {'name':'beta_green', 'lower_limit':-1.,'upper_limit':5.},
     {'name':'K_GREEN', 'lower_limit':-8.0,'upper_limit':5.0},
     {'name':'n_GREEN', 'lower_limit':0.,'upper_limit':4.0},
    # {'name':'delta_green', 'lower_limit':0.0,'upper_limit':1.0},
@@ -227,19 +227,19 @@ def solvedfunction(Gi,A,I,par):
     par['delta_red']=1 #1.2
 
     Gii=Gi
-    Gii = np.maximum(Gi - par['basal_green'],0)
+    Gii = np.maximum(Gi - 10**par['basal_green'],0)
 
     Gf = Gii / ( 1+ 10**par['K_IPTG']*I)
 
-    R = par['alpha_red'] + ( par['beta_red']*np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))
+    R = 10**par['alpha_red'] + ( 10**par['beta_red']*np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red']))
     #R = (10**par['beta_red'])*np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(A*10**par['K_ahl_red'],par['n_ahl_red'])) 
     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN']))  #+ 10**par['basal_red']
   #  R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
     R = ( R ) / par['delta_red']  #################
  #   R = np.minimum(R + par['cell_red'],par['cell_red'])
    # R = np.maximum(R - par['cell_red'],0) # fluorescence background on X
-    R=  np.maximum(R - par['basal_red'],0)
-    G = par['alpha_green'] + ( par['beta_green']*np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])) 
+    R=  np.maximum(R - 10**par['basal_red'],0)
+    G = 10**par['alpha_green'] + ( 10**par['beta_green']*np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])) 
     #G = (10**par['beta_green'])*np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))
     G = G / (1 + np.power(R*10**par['K_RED'],par['n_RED'])) #+ 10**par['basal_green']
     G = (G ) / par['delta_green']
@@ -268,8 +268,8 @@ def findss(A,I,par):
     for ai,a in enumerate(A):
         for iptgi,iptg in enumerate(I):
             Gi=np.arange(0,100,1)
-            Gi=np.logspace(-50,5,1000,base=10)
-            f=solvedfunction(Gi,a,iptg,par)
+            Gi=np.logspace(-50,10,10000,base=10)
+            f=solvedfunction(Gi,a,iptg,par)         
             x=f[1:-1]*f[0:-2] #when the output give <0, where is a change in sign, meaning 0 is crossed
             index=np.where(x<0)
             for it,i in enumerate(index[0]):
@@ -278,12 +278,12 @@ def findss(A,I,par):
               #  Gii = np.maximum(G - par['cell_green'],0) # fluorescence background on X
                 #Gii = np.maximum(Gi - par['basal_green'],0)
                 Gf = G / ( 1+ 10**par['K_IPTG']*iptg)
-                R = par['alpha_red'] + ( par['beta_red']*np.power(a*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
+                R = 10**par['alpha_red'] + ( 10**par['beta_red']*np.power(a*10**par['K_ahl_red'],par['n_ahl_red']))/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
                 #R = (10**par['beta_red'])*np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])/(1+np.power(a*10**par['K_ahl_red'],par['n_ahl_red'])) 
                 R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN'])) #+ 10**par['basal_red']
                 #R = ( R + 10**par['alpha_red'] ) / par['delta_red']  
                 R = ( R ) / par['delta_red'] 
-                R=  np.maximum(R - par['basal_red'],0)
+                R=  np.maximum(R - 10**par['basal_red'],0)
                # R = np.minimum(R + par['cell_red'],par['cell_red'])
   
 
@@ -376,7 +376,7 @@ def distance2(pars,path):
 
     return d
 
-def distance4(pars,path):
+def distance4(pars,path,split=False):
     
    # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
     #gmin,gmax,rmin,rmax=Get_data4(path,pars)
@@ -390,19 +390,15 @@ def distance4(pars,path):
 
     M=np.nanmax(ss[:,:,:,:],axis=2)
     m=np.nanmin(ss[:,:,:,:],axis=2)
-
     '''
     hyst= gmax.to_numpy()-gmin.to_numpy()
     hystss= M[:,:,0]-m[:,:,0]
     d_hyst = np.sqrt(np.nansum(np.power(hyst -hystss,2)))# /(len(IPTG)*len(AHL))
     '''
-
     
     hyst= gmax.to_numpy()-gmin.to_numpy()
     hyst[hyst<100]=0
     hyst[hyst>1]=1
-
-
     
     hyst2= rmax.to_numpy()-rmin.to_numpy()
     hyst2[hyst2<100]=0
@@ -416,22 +412,16 @@ def distance4(pars,path):
                         [1,   1,  1,  1,  0,  0],
                         [1,   1,  1,  0,  0,  0] ] )
 
-                              
-                            
+                                                         
     hystss = np.count_nonzero(~np.isnan(ss[:,:,:,0]),axis=2)#(ss[:,:,:,:],axis=2)
     hystss[hystss<2]=0
     hystss[hystss>0]=1
-
-    
+   
     hystss2 = np.count_nonzero(~np.isnan(ss[:,:,:,1]),axis=2)#(ss[:,:,:,:],axis=2)
     hystss2[hystss2<2]=0
     hystss2[hystss2>0]=1
-
-
     
     d_hyst =np.nansum(1000*np.power(hysttable-hystss2,2)) + np.nansum(1000*np.power(hysttable-hystss,2))
- 
-
     #hystss2= M[:,:,1]-m[:,:,1]
     #d_hyst2 = np.sqrt(np.nansum(np.power(hyst2 -hystss2,2)))# /(len(IPTG)*len(AHL))
     
@@ -452,14 +442,19 @@ def distance4(pars,path):
     d_red2=np.nansum(t)# /(len(IPTG)*len(AHL))  
  
     d=(d_green+d_red+d_green2+d_red2)
-    #d=(d_green+d_red+d_red2)
-    
-    #print(d_green,d_red,d_green2,d_red2,d_hyst,d_hyst2)
-    #print(d, d_hyst)
+    dtot=d #+d_hyst
 
-   # print(d_green)#,d_red,d_green2,d_red2,d_hyst,d_hyst2)
-   # print(d_hyst)
-    return d +d_hyst # +4*(d_hyst+d_hyst2)
+    if split:
+      d_hystgreen = 1000*np.power(hysttable-hystss2,2)
+      d_hystred= 1000*np.power(hysttable-hystss,2)
+      d_green=np.sqrt(np.power(gmax.to_numpy() - M[:,:,0],2))
+      d_green2=np.sqrt(np.power(gmin.to_numpy() - m[:,:,0],2))
+      d_red=np.sqrt(np.power(rmax.to_numpy() - M[:,:,1],2))# /(len(IPTG)*len(AHL))  
+      d_red2=np.sqrt(np.power(rmin.to_numpy() - m[:,:,1],2))
+      dtot=np.array([d_green,d_green2,d_hystgreen,d_red,d_red2,d_hystred])
+      
+    
+    return dtot # +4*(d_hyst+d_hyst2)
     
    
 
