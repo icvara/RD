@@ -17,11 +17,15 @@ import shutil
 
 
 
-version="FIT_TSLT_test"#_hyst"#_percent_distancenomean"
-data="data.txt"
-modeltype= "TSXLT" #TSLT TSXLT
-datafile = 'data/'+modeltype + '/' +data
+datatype=""
+modeltype= "TSLT"   #TSLT TSXLT
+version="FIT002_" + modeltype + datatype
 pl=  None
+
+
+data="data"+datatype+".txt"
+datafile = 'data/'+modeltype + '/' +data
+
 
 
 initdist=1000000000
@@ -31,7 +35,7 @@ if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there
 
 path='/users/ibarbier/RD/'
-path='C:/Users/Administrator/Desktop/Modeling/RD/'
+#path='C:/Users/Administrator/Desktop/Modeling/RD/'
 
 parlist=model.parlist
 

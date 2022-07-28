@@ -18,31 +18,31 @@ tt=120 #totaltime
 
 parlist = [
 
-    {'name':'alpha_red', 'lower_limit':0.,'upper_limit':5.},
-    {'name':'basal_red', 'lower_limit':-4.,'upper_limit':3.},
-    {'name':'beta_red', 'lower_limit':0.,'upper_limit':5.},
-    {'name':'K_RED', 'lower_limit':-8.0,'upper_limit':5.0},
+    {'name':'alpha_red', 'lower_limit':-4.,'upper_limit':4.},
+   # {'name':'basal_red', 'lower_limit':-4.,'upper_limit':4.},
+    {'name':'beta_red', 'lower_limit':-4.,'upper_limit':4.},
+    {'name':'K_RED', 'lower_limit':-5.0,'upper_limit':5.0},
     {'name':'n_RED', 'lower_limit':0.0,'upper_limit':2.0},
-    {'name':'K_ahl_red', 'lower_limit':-5.0,'upper_limit':4.0},
+    {'name':'K_ahl_red', 'lower_limit':-5.0,'upper_limit':5.0},
     {'name':'n_ahl_red', 'lower_limit':0.0,'upper_limit':2.0},
     {'name':'F_red', 'lower_limit':-4.0,'upper_limit':2.0},
 
-    {'name':'alpha_green', 'lower_limit':-1.,'upper_limit':5.},
-    {'name':'basal_green', 'lower_limit':-4.,'upper_limit':3.},
-    {'name':'beta_green', 'lower_limit':-1.,'upper_limit':5.},
-    {'name':'K_GREEN', 'lower_limit':-8.0,'upper_limit':5.0},
+    {'name':'alpha_green', 'lower_limit':-4.,'upper_limit':4.},
+   # {'name':'basal_green', 'lower_limit':-4.,'upper_limit':4.},
+    {'name':'beta_green', 'lower_limit':-4.,'upper_limit':4.},
+    {'name':'K_GREEN', 'lower_limit':-5.0,'upper_limit':5.0},
     {'name':'n_GREEN', 'lower_limit':0.,'upper_limit':2.0},
-    {'name':'K_ahl_green', 'lower_limit':-5.0,'upper_limit':4.0},
+    {'name':'K_ahl_green', 'lower_limit':-5.0,'upper_limit':5.0},
     {'name':'n_ahl_green', 'lower_limit':.0,'upper_limit':2.0},
     {'name':'F_green', 'lower_limit':-4.0,'upper_limit':2.0},
 
-    {'name':'K_IPTG', 'lower_limit':-2.0,'upper_limit':5.0},
-#'''
-    {'name':'beta_ahl', 'lower_limit':-1.0,'upper_limit':1.0},
-    {'name':'K_ahl', 'lower_limit':-4.0,'upper_limit':1.0},
-    {'name':'n_ahl', 'lower_limit':0.0,'upper_limit':2.0},
-    #{'name':'delta_ahl', 'lower_limit':0.0,'upper_limit':0.0}
-#'''
+    {'name':'K_IPTG', 'lower_limit':-2.0,'upper_limit':5.0}#,
+    
+    #{'name':'beta_ahl', 'lower_limit':-1.0,'upper_limit':1.0},
+    #{'name':'K_ahl', 'lower_limit':-4.0,'upper_limit':1.0},
+    #{'name':'n_ahl', 'lower_limit':0.0,'upper_limit':2.0}
+  
+    
 ]
 
 
@@ -204,7 +204,7 @@ def solvedfunction(Gi,A,I,par,model):
     elif model == 'TSXLT':
 
         Gf = Gi / ( 1+ 10**par['K_IPTG']*I)
-        Gfluo = Gi*10**par['F_green'] + 10**par['basal_green'] #dissociate LacI form GFP
+        Gfluo = Gi*10**par['F_green'] # + 10**par['basal_green'] #dissociate LacI form GFP
 
         AHL =  ( 10**par['beta_ahl']*np.power(Gfluo*10**par['K_ahl'],par['n_ahl']))/(1+np.power(Gfluo*10**par['K_ahl'],par['n_ahl'])) 
         AHL = (AHL) / par['delta_ahl']
@@ -256,15 +256,15 @@ def findss(A,I,par,model):
                     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN'])) #+ 10**par['basal_red']
                     R = ( R ) / par['delta_red'] 
 
-                    R = R*10**par['F_red'] + 10**par['basal_red'] #dissociate TetR form mcherry
-                    G = G*10**par['F_green'] + 10**par['basal_green'] #dissociate LacI form GFP
+                    R = R*10**par['F_red'] #+ 10**par['basal_red'] #dissociate TetR form mcherry
+                    G = G*10**par['F_green'] #+ 10**par['basal_green'] #dissociate LacI form GFP
                     ss[ai,iptgi,it]=np.array([G,R])
 
 
                 if model == 'TSXLT':
                     G = brentq(solvedfunction, Gi[i], Gi[i+1],args=(a,iptg,par,model)) #find the value of AHL at 0
                     Gf = G / ( 1+ 10**par['K_IPTG']*iptg)
-                    Gfluo = G*10**par['F_green'] + 10**par['basal_green'] 
+                    Gfluo = G*10**par['F_green'] #+ 10**par['basal_green'] 
 
                     AHL =  ( 10**par['beta_ahl']*np.power(Gfluo*10**par['K_ahl'],par['n_ahl']))/(1+np.power(Gfluo*10**par['K_ahl'],par['n_ahl'])) 
                     AHL = (AHL) / par['delta_ahl']
@@ -274,7 +274,7 @@ def findss(A,I,par,model):
                     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN'])) #+ 10**par['basal_red']
                     R = ( R ) / par['delta_red'] 
 
-                    R = R*10**par['F_red'] + 10**par['basal_red'] #dissociate TetR form mcherry
+                    R = R*10**par['F_red']# + 10**par['basal_red'] #dissociate TetR form mcherry
                     G = Gfluo
                     ss[ai,iptgi,it]=np.array([G,R,AHL])
 
@@ -332,8 +332,8 @@ def Get_data(dataname, st='median'):
         gr = df_gr.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
 
         df_R=df[df['fluo'] == "RED"]
-        df_rg=df_G[df_G["sample"] == "G"]
-        df_rr=df_G[df_G["sample"] == "R"]
+        df_rg=df_R[df_R["sample"] == "G"]
+        df_rr=df_R[df_R["sample"] == "R"]
         rg = df_rg.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
         rr = df_rr.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
 
@@ -346,8 +346,8 @@ def Get_data(dataname, st='median'):
         gr = df_gr.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
 
         df_R=df[df['gate'] == 2]
-        df_rg=df_G[df_G["sample"] == "G"]
-        df_rr=df_G[df_G["sample"] == "R"]
+        df_rg=df_R[df_R["sample"] == "G"]
+        df_rr=df_R[df_R["sample"] == "R"]
         rg = df_rg.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
         rr = df_rr.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
 
@@ -360,8 +360,8 @@ def Get_data(dataname, st='median'):
         gr = df_gr.pivot(index='AHL', columns='IPTG', values=st).astype(float)
 
         df_R=df[df['fluo'] == "RED"]
-        df_rg=df_G[df_G["sample"] == "G"]
-        df_rr=df_G[df_G["sample"] == "R"]
+        df_rg=df_R[df_R["sample"] == "G"]
+        df_rr=df_R[df_R["sample"] == "R"]
         rg = df_rg.pivot(index='AHL', columns='IPTG', values=st).astype(float)
         rr = df_rr.pivot(index='AHL', columns='IPTG', values=st).astype(float)
 

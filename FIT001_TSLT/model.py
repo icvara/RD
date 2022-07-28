@@ -19,7 +19,7 @@ tt=120 #totaltime
 parlist = [
 
     {'name':'alpha_red', 'lower_limit':-4.,'upper_limit':4.},
-   # {'name':'basal_red', 'lower_limit':-4.,'upper_limit':4.},
+    {'name':'basal_red', 'lower_limit':-4.,'upper_limit':4.},
     {'name':'beta_red', 'lower_limit':-4.,'upper_limit':4.},
     {'name':'K_RED', 'lower_limit':-5.0,'upper_limit':5.0},
     {'name':'n_RED', 'lower_limit':0.0,'upper_limit':2.0},
@@ -28,7 +28,7 @@ parlist = [
     {'name':'F_red', 'lower_limit':-4.0,'upper_limit':2.0},
 
     {'name':'alpha_green', 'lower_limit':-4.,'upper_limit':4.},
-   # {'name':'basal_green', 'lower_limit':-4.,'upper_limit':4.},
+    {'name':'basal_green', 'lower_limit':-4.,'upper_limit':4.},
     {'name':'beta_green', 'lower_limit':-4.,'upper_limit':4.},
     {'name':'K_GREEN', 'lower_limit':-5.0,'upper_limit':5.0},
     {'name':'n_GREEN', 'lower_limit':0.,'upper_limit':2.0},
@@ -204,7 +204,7 @@ def solvedfunction(Gi,A,I,par,model):
     elif model == 'TSXLT':
 
         Gf = Gi / ( 1+ 10**par['K_IPTG']*I)
-        Gfluo = Gi*10**par['F_green'] # + 10**par['basal_green'] #dissociate LacI form GFP
+        Gfluo = Gi*10**par['F_green'] + 10**par['basal_green'] #dissociate LacI form GFP
 
         AHL =  ( 10**par['beta_ahl']*np.power(Gfluo*10**par['K_ahl'],par['n_ahl']))/(1+np.power(Gfluo*10**par['K_ahl'],par['n_ahl'])) 
         AHL = (AHL) / par['delta_ahl']
@@ -256,15 +256,15 @@ def findss(A,I,par,model):
                     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN'])) #+ 10**par['basal_red']
                     R = ( R ) / par['delta_red'] 
 
-                    R = R*10**par['F_red'] #+ 10**par['basal_red'] #dissociate TetR form mcherry
-                    G = G*10**par['F_green'] #+ 10**par['basal_green'] #dissociate LacI form GFP
+                    R = R*10**par['F_red'] + 10**par['basal_red'] #dissociate TetR form mcherry
+                    G = G*10**par['F_green'] + 10**par['basal_green'] #dissociate LacI form GFP
                     ss[ai,iptgi,it]=np.array([G,R])
 
 
                 if model == 'TSXLT':
                     G = brentq(solvedfunction, Gi[i], Gi[i+1],args=(a,iptg,par,model)) #find the value of AHL at 0
                     Gf = G / ( 1+ 10**par['K_IPTG']*iptg)
-                    Gfluo = G*10**par['F_green'] #+ 10**par['basal_green'] 
+                    Gfluo = G*10**par['F_green'] + 10**par['basal_green'] 
 
                     AHL =  ( 10**par['beta_ahl']*np.power(Gfluo*10**par['K_ahl'],par['n_ahl']))/(1+np.power(Gfluo*10**par['K_ahl'],par['n_ahl'])) 
                     AHL = (AHL) / par['delta_ahl']
@@ -274,7 +274,7 @@ def findss(A,I,par,model):
                     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN'])) #+ 10**par['basal_red']
                     R = ( R ) / par['delta_red'] 
 
-                    R = R*10**par['F_red']# + 10**par['basal_red'] #dissociate TetR form mcherry
+                    R = R*10**par['F_red'] + 10**par['basal_red'] #dissociate TetR form mcherry
                     G = Gfluo
                     ss[ai,iptgi,it]=np.array([G,R,AHL])
 
