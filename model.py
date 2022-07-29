@@ -201,10 +201,11 @@ def solvedfunction(Gi,A,I,par,model):
 
         func = G - Gi
 
+
     elif model == 'TSXLT':
 
         Gf = Gi / ( 1+ 10**par['K_IPTG']*I)
-        Gfluo = Gi*10**par['F_green'] # + 10**par['basal_green'] #dissociate LacI form GFP
+        Gfluo = Gi # Gi*10**par['F_green']  + 10**par['basal_green'] #dissociate LacI form GFP
 
         AHL =  ( 10**par['beta_ahl']*np.power(Gfluo*10**par['K_ahl'],par['n_ahl']))/(1+np.power(Gfluo*10**par['K_ahl'],par['n_ahl'])) 
         AHL = (AHL) / par['delta_ahl']
@@ -218,7 +219,6 @@ def solvedfunction(Gi,A,I,par,model):
         G = 10**par['alpha_green'] + ( 10**par['beta_green']*np.power(A*10**par['K_ahl_green'],par['n_ahl_green']))/(1+np.power(A*10**par['K_ahl_green'],par['n_ahl_green'])) 
         G = G / (1 + np.power(R*10**par['K_RED'],par['n_RED'])) 
         G = (G ) / par['delta_green']
-
 
         func = G - Gi
 
@@ -256,15 +256,17 @@ def findss(A,I,par,model):
                     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN'])) #+ 10**par['basal_red']
                     R = ( R ) / par['delta_red'] 
 
-                    R = R*10**par['F_red'] #+ 10**par['basal_red'] #dissociate TetR form mcherry
-                    G = G*10**par['F_green'] #+ 10**par['basal_green'] #dissociate LacI form GFP
+                    #R = R*10**par['F_red'] + 10**par['basal_red'] #dissociate TetR form mcherry
+                    #G = G*10**par['F_green'] + 10**par['basal_green'] #dissociate LacI form GFP
+                    R = R + 10**par['basal_red'] #dissociate TetR form mcherry
+                    G = G + 10**par['basal_green'] #dissociate LacI form GFP
                     ss[ai,iptgi,it]=np.array([G,R])
 
 
                 if model == 'TSXLT':
                     G = brentq(solvedfunction, Gi[i], Gi[i+1],args=(a,iptg,par,model)) #find the value of AHL at 0
                     Gf = G / ( 1+ 10**par['K_IPTG']*iptg)
-                    Gfluo = G*10**par['F_green'] #+ 10**par['basal_green'] 
+                    #Gfluo = G*10**par['F_green'] + 10**par['basal_green'] 
 
                     AHL =  ( 10**par['beta_ahl']*np.power(Gfluo*10**par['K_ahl'],par['n_ahl']))/(1+np.power(Gfluo*10**par['K_ahl'],par['n_ahl'])) 
                     AHL = (AHL) / par['delta_ahl']
@@ -274,8 +276,12 @@ def findss(A,I,par,model):
                     R = R / (1 + np.power(Gf*10**par['K_GREEN'],par['n_GREEN'])) #+ 10**par['basal_red']
                     R = ( R ) / par['delta_red'] 
 
-                    R = R*10**par['F_red']# + 10**par['basal_red'] #dissociate TetR form mcherry
-                    G = Gfluo
+                    R = R*10**par['F_red'] + 10**par['basal_red'] #dissociate TetR form mcherry
+                    #G = Gfluo
+
+                    R = R + 10**par['basal_red'] #dissociate TetR form mcherry
+                    G = G + 10**par['basal_green'] #dissociate LacI form GFP
+
                     ss[ai,iptgi,it]=np.array([G,R,AHL])
 
              #   ss[ai,iptgi,it]=np.array([G+par['basal_green'],R+par['basal_red']])
@@ -337,7 +343,7 @@ def Get_data(dataname, st='median'):
         rg = df_rg.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
         rr = df_rr.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
 
-    if t=="percent":
+    elif t=="percent":
         names=df.columns
         df_G=df[df['gate'] == 1]
         df_gg=df_G[df_G["sample"] == "G"]
@@ -351,7 +357,8 @@ def Get_data(dataname, st='median'):
         rg = df_rg.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
         rr = df_rr.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
 
-    if t=="":
+    #elif t=="":
+    else:
         names=df.columns
         df_G=df[df['fluo'] == "GREEN"]
         df_gg=df_G[df_G["sample"] == "G"]

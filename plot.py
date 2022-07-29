@@ -17,11 +17,13 @@ from functools import partial
 
 filename="FIT002_TSLT"#_percent"
 modeltype="TSLT"
-datatype=""#"_percent"
+datatype="_0IPTG"#"_percent"
 
 
 data="data"+datatype+".txt"
 datafile = 'data/'+modeltype + '/' +data
+
+
 
 
 n=['22']#['20','15','10','5']#,'20','10']
@@ -292,112 +294,9 @@ def plotselectedparoverall(n,filename,parlist):
      par_plot2(pdf,pdf2,filename,'Y',parlist4,namelist4)
      
 
-def compare_plot(p,filename,nb):
-        gg,gr,rg,rr=meq.Get_data2(filename)
-        fig, axs = plt.subplots(6, 4)
-        for pi in p:
-            GG,GR,GA,RG,RR,RA = meq.model(pi,100, 0.1)
-            for i in np.arange(0,6):
-
-               # plt.subplot(6,4,1+i*4)
-               axs[i,0].plot(GG[-2,:,i],'b')
-               axs[i,0].plot(gg.to_numpy()[:,i],'-og')
-
-               # plt.subplot(6,4,2+i*4)
-               axs[i,1].plot(GR[-2,:,i],'b')
-               axs[i,1].plot(gr.to_numpy()[:,i],'-or')
-
-               # plt.subplot(6,4,3+i*4)
-               axs[i,2].plot(RG[-2,:,i],'b')          
-               axs[i,2].plot(rg.to_numpy()[:,i],'-og')
-               #plt.subplot(6,4,4+i*4)
-               axs[i,3].plot(RR[-2,:,i],'b')
-               axs[i,3].plot(rr.to_numpy()[:,i],'-or')
-            #plt.show()
-        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
-
-
-def compare_plot2(p,filename,nb,datafile):
-        gg,gr,rg,rr=meq.Get_data2(datafile)
-        A=gg.index.values
-        I=gg.columns.values
-
-        maxi= np.max([ np.max(rr.to_numpy()),np.max(gg.to_numpy())])
-
-        fig, axs = plt.subplots(6, 4)
-        for pi in p:
-            ss=meq.findss(A,I,pi)
-            M=np.nanmax(ss[:,:,:,:],axis=2)
-            m=np.nanmin(ss[:,:,:,:],axis=2)
-            for ii,i in enumerate(I):
-                axs[ii,0].plot(M[:,ii,0],'b',linewidth=0.2)
-                axs[ii,2].plot(M[:,ii,1],'b',linewidth=0.2)    
-                axs[ii,1].plot(m[:,ii,0],'b',linewidth=0.2)
-                axs[ii,3].plot(m[:,ii,1],'b',linewidth=0.2)
-                axs[ii,0].plot(gg.to_numpy()[:,ii],'go', markersize=1.)
-                axs[ii,1].plot(rg.to_numpy()[:,ii],'go', markersize=1., mfc='none')
-                axs[ii,2].plot(rr.to_numpy()[:,ii],'ro', markersize=1.)
-                axs[ii,3].plot(gr.to_numpy()[:,ii],'ro', markersize=1., mfc='none')
-                axs[ii,0].set_ylim(ymin=-0.1,ymax=maxi+.1)
-                axs[ii,1].set_ylim(ymin=-0.1,ymax=maxi+.1)
-                axs[ii,2].set_ylim(ymin=-0.1,ymax=maxi+.1)
-                axs[ii,3].set_ylim(ymin=-0.1,ymax=maxi+.1)
-        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
-
-
-def compare_plot3(p,filename,nb,datafile):
-        Ggg,Ggr,Grg,Grr,Rgg,Rgr,Rrg,Rrr=meq.Get_data3(datafile)
-        A=Ggg.index.values
-        I=Ggg.columns.values
-
-        maxi= np.nanmax([ np.nanmax(Rrr.to_numpy()),np.nanmax(Ggg.to_numpy())])
-        mini= np.nanmin([ np.nanmin(Grr.to_numpy()),np.nanmin(Rgg.to_numpy())])
-
-        fig, axs = plt.subplots(6, 4)
-        ss=meq.findss(A,I,p[0])
-        Mmindist=np.nanmax(ss[:,:,:,:],axis=2)
-        mmindist=np.nanmin(ss[:,:,:,:],axis=2)
-        for pi in p:
-            ss=meq.findss(A,I,pi)
-            M=np.nanmax(ss[:,:,:,:],axis=2)
-            m=np.nanmin(ss[:,:,:,:],axis=2)
-            
-            for ii,i in enumerate(I):
-                axs[ii,0].plot(M[:,ii,0],'b',linewidth=0.2)
-                axs[ii,2].plot(M[:,ii,1],'b',linewidth=0.2)    
-                axs[ii,1].plot(m[:,ii,0],'b',linewidth=0.2)
-                axs[ii,3].plot(m[:,ii,1],'b',linewidth=0.2)
-                
-                
-                
-                axs[ii,0].plot(Ggg.to_numpy()[:,ii],'go', markersize=1.)
-                axs[ii,0].plot(Grg.to_numpy()[:,ii],'go', markersize=1.)
-
-                axs[ii,1].plot(Rgg.to_numpy()[:,ii],'go', markersize=1.)
-                axs[ii,1].plot(Rrg.to_numpy()[:,ii],'go', markersize=1.)
-                
-                axs[ii,2].plot(Rrr.to_numpy()[:,ii],'ro', markersize=1.)
-                axs[ii,2].plot(Rgr.to_numpy()[:,ii],'ro', markersize=1.)                
-                
-                axs[ii,3].plot(Grr.to_numpy()[:,ii],'ro', markersize=1.)
-                axs[ii,3].plot(Ggr.to_numpy()[:,ii],'ro', markersize=1.) 
-                
-                axs[ii,0].set_ylim(ymin=mini-0.1,ymax=maxi+.1)
-                axs[ii,1].set_ylim(ymin=mini-0.1,ymax=maxi+.1)
-                axs[ii,2].set_ylim(ymin=mini-0.1,ymax=maxi+.1)
-                axs[ii,3].set_ylim(ymin=mini-0.1,ymax=maxi+.1)
-        for ii,i in enumerate(I):
-                axs[ii,0].plot(Mmindist[:,ii,0],'r',linewidth=0.2)
-                axs[ii,2].plot(Mmindist[:,ii,1],'r',linewidth=0.2)    
-                axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
-                axs[ii,3].plot(mmindist[:,ii,1],'r',linewidth=0.2)      
-        plt.show()  
-        #plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
-
-
-def compare_plot4(p,filename,nb,datafile,modeltype):
+def compare_plot(p,filename,nb,datafile,modeltype):
        # gmin,gmax,rmin,rmax=meq.Get_data4(datafile,p[0])
-        gmin,gmax,rmin,rmax=meq.Get_data(datafile)
+        gmax,gmin,rmax,rmin=meq.Get_data(datafile)
         A=gmin.index.values
         I=gmin.columns.values
         maxi= np.nanmax([ np.nanmax(rmax.to_numpy()),np.nanmax(gmax.to_numpy())])
@@ -412,6 +311,7 @@ def compare_plot4(p,filename,nb,datafile,modeltype):
             ss=meq.findss(A,I,pi,modeltype)
             M=np.nanmax(ss[:,:,:,:],axis=2)
             m=np.nanmin(ss[:,:,:,:],axis=2)
+            print(ss)
             
             for ii,i in enumerate(I):
                 axs[ii,0].plot(M[:,ii,0],'g-',linewidth=0.4)
@@ -440,8 +340,8 @@ def compare_plot4(p,filename,nb,datafile,modeltype):
                 axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
                 axs[ii,1].plot(mmindist[:,ii,1],'r',linewidth=0.2)  
                 '''    
-        #plt.show()  
-        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+        plt.show()  
+        #plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
 
 def plot_distance(p,filename,nb,datafile):
@@ -587,156 +487,77 @@ if __name__ == "__main__":
 
     A=[10]#np.logspace(-4,1,200)
     I=[10]#np.logspace(-1,0,15)
+
+    '''
     for i in n:
 
         p, pdf= load(i,filename,meq.parlist)
         
         
-        par_plot(pdf,filename,i,meq.parlist,namelist)
+        #par_plot(pdf,filename,i,meq.parlist,namelist)
         #plot_distribution(p,filename,i,datafile,modeltype)
-        compare_plot4([p[24],p[499],p[974]],filename,i+"sub",datafile,modeltype)
-        compare_plot4(p,filename,i,datafile,modeltype)
+        #compare_plot4([p[24],p[499],p[974]],filename,i+"sub",datafile,modeltype)
+        #compare_plot4(p,filename,i,datafile,modeltype)
         
 
 
     '''
+    i=n[0]
     p, pdf= load(i,filename,meq.parlist)
     p=p[0]
-    p['alpha_red']= 100.0#2.496783409731153
-    p[ 'beta_red']= 500.05#3.114471765921569
-    p[ 'basal_red']= 270.05#3.114471765921569
-    p[ 'K_ahl_red']= 2#-1.1621886779174828
-    p[ 'n_ahl_red']= 1# 0.27463516060617854
-    p[ 'alpha_green']= 0.2#2.72500158113845
-    p[ 'basal_green']= 270.05#3.114471765921569
-    p[  'beta_green']= 500.7# -0.8161096974564463
-    p[ 'K_ahl_green'] = 2.5#-1.555685369218159
-    p[ 'n_ahl_green'] =  1#3.4831414888659915
-
-    p[ 'K_RED'] = -1.#-4.047529380939851
-    p[ 'n_RED'] = 3.7# 2.8230220470434815
-
-    p[ 'K_GREEN']= -1.#-4.545681717524607
-    p[ 'n_GREEN' ]= 4# 2.2761084701257603
-
-    p[ 'K_IPTG'] = 2#4.207597662328212
-    d=meq.distance4(p,datafile)
-    print(d)
-    compare_plot4([p],filename,"test",datafile)
-    '''
-
-
-  #  p_mode=pdf.mode(axis=0).to_dict(orient='index')[0]
-
-    #bifu_heatmap(p_mode)
-
-
-    '''   
-    A=np.logspace(-4,1,200)
-    I=np.logspace(-1,0,15)
-    I=np.logspace(-.9,-0.3,15)
-    print(I)
-
-
-    factor='n_ahl_red'
-    print(p_mode)
-    y=0.5
-    p_mode[factor]=y
-    ss=meq.findss(A,I,p_mode)
-
-
-
-    fig, axs = plt.subplots(2, 15,figsize=(15, 2))#  constrained_layout = True)
-    for ii,i in enumerate(I) :
-       # for s,ls in enumerate(['-','--','-']) :
-        for s,ls in enumerate(['bo','ro','bo']) :
-               
-            #axs[1,ii].plot(ss[:,ii,s,1],'r',linestyle=ls)
-            axs[1,ii].plot(ss[:,ii,s,1],ls,markersize=1)
-
-            #axs[0,ii].plot(ss[:,ii,s,0],'g',linestyle=ls)
-            axs[0,ii].plot(ss[:,ii,s,0],ls,markersize=1)
-
-
-        axs[1,ii].set_ylim(ymin=-.1,ymax=1.1)
-        axs[0,ii].set_ylim(ymin=-.1,ymax=1.1)
-
-   # plt.ylim(ymin=-.1,ymax=1.1)
-    #plt.subplot_tool()
-   # plt.savefig(filename+"/plot/"+'bifurcation_zoom.png', bbox_inches='tight')
-
-    plt.show()
-
-    '''    
-
-
-    '''    
-    A=np.logspace(-4,1,100)
-    I=np.logspace(-1,0,10)
-    PP = np.linspace(0.5,1.5,10)
-
-
-    ss=meq.findss(A,I,p_mode)
-    print(p_mode)
-    factor='K_IPTG'
-
-    fig, axs = plt.subplots(10, 10,figsize=(10, 10))#  constrained_layout = True)
-    for yy,y in enumerate(PP):
-        p_mode[factor]=y
-        ss=meq.findss(A,I,p_mode)
-        for ii,i in enumerate(I) :
-
-
-
-
-            for s,ls in enumerate(['-','--','-']) :
-                
-                    #axs[1,ii].plot(ss[:,ii,s,1],'r',linestyle=ls)
-                    axs[yy,ii].plot(ss[:,ii,s,0],'g',linestyle=ls)
-
-            axs[yy,ii].set_ylim(ymin=-.1,ymax=1.1)
-            axs[yy,ii].set_ylim(ymin=-.1,ymax=1.1)
-
-   # plt.ylim(ymin=-.1,ymax=1.1)
-    #plt.subplot_tool()
-   # plt.savefig(filename+"/plot/"+factor+'_mushroom.png', bbox_inches='tight')
-
-    plt.show()
-    '''
     
-    '''
-    A=np.logspace(-4,1,1000)
-    I=np.logspace(-1,0,15)
-    I=np.logspace(-.9,-0.3,25)
+    p['alpha_red']= -3.#2.496783409731153
+    p[ 'beta_red']= 2.4#3.114471765921569
+
+    p[ 'K_ahl_red']= 1.5#-1.1621886779174828
+    p[ 'n_ahl_red']= 2# 0.27463516060617854
+
+    p[ 'alpha_green']= -3.#2.72500158113845
+    p[  'beta_green']= 2.7# -0.8161096974564463
+
+    p[ 'K_ahl_green'] = 2.#-1.555685369218159
+    p[ 'n_ahl_green'] =  2#3.4831414888659915
+
+    p['F_red']=0
+    p['F_green']=0
+
+    p[ 'basal_red']= 2.5#3.114471765921569
+    p[ 'basal_green']= 2.5#3.114471765921569
+
+    p[ 'K_RED'] = 1#-4.047529380939851
+    p[ 'K_GREEN']= 1#-4.545681717524607
 
 
-    factor='n_ahl_red'
-    y=0.5
-   # p_mode[factor]=y
-    ss=meq.findss(A,I,p_mode)
+    p[ 'n_RED'] = 2# 2.8230220470434815
+    p[ 'n_GREEN' ]= 2# 2.2761084701257603
 
-    c=0
-    fig, axs = plt.subplots(5, 5,figsize=(20, 20))#  constrained_layout = True)
-    for ii in np.arange(5) :
-        for jj in np.arange(5) :
-            for s,ls in enumerate(['bo','ro','bo']) :
-                   
-                axs[ii,jj].plot(ss[:,c,s,0],ls,markersize=1)
-            c=c+1
+    p[ 'K_IPTG'] = 2.8#4.207597662328212
 
+    #d=meq.distance(p,datafile,modeltype)
+    #print(d)
 
+    A= np.array([0.05,0.025,0.0125,0.00625,0.003125,0]) # np.logspace(-4,1,2)
+    A=np.flipud(A)
+    A=np.logspace(-4,-1,20)
+    I=[0,0.0625,0.125,0.25,0.5,1]#np.logspace(-1,0,2)
+    J=np.linspace(-1,1,6)
 
-            axs[ii,jj].set_ylim(ymin=-.1,ymax=1.1)
-
-   # plt.ylim(ymin=-.1,ymax=1.1)
-    #plt.subplot_tool()
-   # plt.savefig(filename+"/plot/"+'bifurcation_mushroom_zoom_now.png', bbox_inches='tight')
-
+    fig, axs = plt.subplots(6, 6, figsize=(7,7))
+    for jj,j in enumerate(J):
+        ss=meq.findss(A,I,p,modeltype)
+        for ii,i in enumerate(I):
+                    axs[ii,jj].plot(ss[:,ii,:,0],'o')
+    #plt.plot(ss[:,0,:,0],'-r')
     plt.show()
 
-    '''
+
     
-        
+
+    compare_plot([p],filename,"test",datafile,modeltype)
+    
+
+
+
 
 
 
