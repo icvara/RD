@@ -18,25 +18,25 @@ tt=120 #totaltime
 
 parlist = [
 
-    {'name':'alpha_red', 'lower_limit':-4.,'upper_limit':4.},
-   # {'name':'basal_red', 'lower_limit':-4.,'upper_limit':4.},
-    {'name':'beta_red', 'lower_limit':-4.,'upper_limit':4.},
-    {'name':'K_RED', 'lower_limit':-5.0,'upper_limit':5.0},
+    {'name':'alpha_red', 'lower_limit':-1.,'upper_limit':2.},
+    {'name':'basal_red', 'lower_limit':0.,'upper_limit':3.},
+    {'name':'beta_red', 'lower_limit':1.,'upper_limit':4.},
+    {'name':'K_RED', 'lower_limit':-3.0,'upper_limit':2.0},
     {'name':'n_RED', 'lower_limit':0.0,'upper_limit':2.0},
-    {'name':'K_ahl_red', 'lower_limit':-5.0,'upper_limit':5.0},
+    {'name':'K_ahl_red', 'lower_limit':-2.0,'upper_limit':3.0},
     {'name':'n_ahl_red', 'lower_limit':0.0,'upper_limit':2.0},
-    {'name':'F_red', 'lower_limit':-4.0,'upper_limit':2.0},
+    #{'name':'F_red', 'lower_limit':-4.0,'upper_limit':2.0},
 
-    {'name':'alpha_green', 'lower_limit':-4.,'upper_limit':4.},
-   # {'name':'basal_green', 'lower_limit':-4.,'upper_limit':4.},
-    {'name':'beta_green', 'lower_limit':-4.,'upper_limit':4.},
-    {'name':'K_GREEN', 'lower_limit':-5.0,'upper_limit':5.0},
+    {'name':'alpha_green', 'lower_limit':0.,'upper_limit':4.},
+    {'name':'basal_green', 'lower_limit':1.,'upper_limit':4.},
+    {'name':'beta_green', 'lower_limit':1.,'upper_limit':4.},
+    {'name':'K_GREEN', 'lower_limit':-3.0,'upper_limit':2.0},
     {'name':'n_GREEN', 'lower_limit':0.,'upper_limit':2.0},
-    {'name':'K_ahl_green', 'lower_limit':-5.0,'upper_limit':5.0},
+    {'name':'K_ahl_green', 'lower_limit':-2.0,'upper_limit':3.0},
     {'name':'n_ahl_green', 'lower_limit':.0,'upper_limit':2.0},
-    {'name':'F_green', 'lower_limit':-4.0,'upper_limit':2.0},
+    #{'name':'F_green', 'lower_limit':-4.0,'upper_limit':2.0},
 
-    {'name':'K_IPTG', 'lower_limit':-2.0,'upper_limit':5.0}#,
+    {'name':'K_IPTG', 'lower_limit':0.0,'upper_limit':6.0}#,
     
     #{'name':'beta_ahl', 'lower_limit':-1.0,'upper_limit':1.0},
     #{'name':'K_ahl', 'lower_limit':-4.0,'upper_limit':1.0},
@@ -332,14 +332,14 @@ def Get_data(dataname, st='median'):
     if t=="gated":
         names=df.columns
         df_G=df[df['fluo'] == "GREEN"]
-        df_gg=df_G[df_G["sample"] == "G"]
-        df_gr=df_G[df_G["sample"] == "R"]
+        df_gg=df_G[df_G["minmax"] == "max"]
+        df_gr=df_G[df_G["minmax"] == "min"]
         gg = df_gg.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
         gr = df_gr.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
 
         df_R=df[df['fluo'] == "RED"]
-        df_rg=df_R[df_R["sample"] == "G"]
-        df_rr=df_R[df_R["sample"] == "R"]
+        df_rg=df_R[df_R["minmax"] == "min"]
+        df_rr=df_R[df_R["minmax"] == "max"]
         rg = df_rg.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
         rr = df_rr.pivot(index='AHL', columns='IPTG', values='mean').astype(float)
 
@@ -396,8 +396,8 @@ def distance(pars,path,modeltype):
     d_green = np.sqrt(np.power(gg.to_numpy() - M[:,:,0],2))
     d_red = np.sqrt(np.power(rr.to_numpy() - M[:,:,1],2))
 
-    d_green2 = np.sqrt(np.power(rg.to_numpy() - m[:,:,0],2))
-    d_red2 = np.sqrt(np.power(gr.to_numpy() - m[:,:,1],2))
+    d_green2 = np.sqrt(np.power(gr.to_numpy() - m[:,:,0],2))
+    d_red2 = np.sqrt(np.power(rg.to_numpy() - m[:,:,1],2))
     
     d=np.nansum((d_green,d_red,d_red2,d_green2))
 

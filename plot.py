@@ -15,9 +15,10 @@ import time
 from functools import partial
 
 
-filename="FIT002_TSLT"#_percent"
+
 modeltype="TSLT"
-datatype="_0IPTG"#"_percent"
+datatype=""#"_percent"
+filename="FIT005_TSLT" +datatype #_percent"
 
 
 data="data"+datatype+".txt"
@@ -26,7 +27,7 @@ datafile = 'data/'+modeltype + '/' +data
 
 
 
-n=['22']#['20','15','10','5']#,'20','10']
+n=['29']#'34','30','25','20','15','10']#['20','15','10','5']#,'20','10']
 #n=['100','150','175']
 #n=['15']
 #
@@ -340,8 +341,8 @@ def compare_plot(p,filename,nb,datafile,modeltype):
                 axs[ii,1].plot(mmindist[:,ii,0],'r',linewidth=0.2)
                 axs[ii,1].plot(mmindist[:,ii,1],'r',linewidth=0.2)  
                 '''    
-        plt.show()  
-        #plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
+        #plt.show()  
+        plt.savefig(filename+"/plot/"+nb+'_compare_plot.png', bbox_inches='tight',dpi=300)
 
 
 def plot_distance(p,filename,nb,datafile):
@@ -488,16 +489,16 @@ if __name__ == "__main__":
     A=[10]#np.logspace(-4,1,200)
     I=[10]#np.logspace(-1,0,15)
 
-    '''
+
     for i in n:
 
         p, pdf= load(i,filename,meq.parlist)
         
         
-        #par_plot(pdf,filename,i,meq.parlist,namelist)
-        #plot_distribution(p,filename,i,datafile,modeltype)
-        #compare_plot4([p[24],p[499],p[974]],filename,i+"sub",datafile,modeltype)
-        #compare_plot4(p,filename,i,datafile,modeltype)
+        par_plot(pdf,filename,i,meq.parlist,namelist)
+        plot_distribution(p,filename,i,datafile,modeltype)
+        compare_plot([p[24],p[499],p[974]],filename,i+"sub",datafile,modeltype)
+        compare_plot(p,filename,i,datafile,modeltype)
         
 
 
@@ -555,7 +556,7 @@ if __name__ == "__main__":
 
     compare_plot([p],filename,"test",datafile,modeltype)
     
-
+    '''
 
 
 
