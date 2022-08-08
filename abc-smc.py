@@ -17,9 +17,9 @@ import shutil
 
 
 
-datatype="_025IPTG"
+datatype="_gated"
 modeltype= "TSLT"   #TSLT TSXLT
-version="FIT005_" + modeltype + datatype
+version="FIT009v2_" + modeltype + datatype
 pl=  None
 
 
@@ -29,7 +29,7 @@ datafile = 'data/'+modeltype + '/' +data
 
 
 initdist=1000000000
-finaldist=300.
+finaldist=100.
 
 if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
         os.mkdir(version) ## create it, the output will go there

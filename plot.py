@@ -17,8 +17,8 @@ from functools import partial
 
 
 modeltype="TSLT"
-datatype=""#"_percent"
-filename="FIT005_TSLT" +datatype #_percent"
+datatype="_gated"#"_percent"
+filename="FIT009v2_TSLT" +datatype #_percent"
 
 
 data="data"+datatype+".txt"
@@ -27,7 +27,7 @@ datafile = 'data/'+modeltype + '/' +data
 
 
 
-n=['29']#'34','30','25','20','15','10']#['20','15','10','5']#,'20','10']
+n=['32']#'34','30','25','20','15','10']#['20','15','10','5']#,'20','10']
 #n=['100','150','175']
 #n=['15']
 #
@@ -139,7 +139,7 @@ def par_plot(df,name,nb,parlist,namelist):
  
     for i,par1 in enumerate(namelist):
         for j,par2 in enumerate(namelist):
-            plt.subplot(len(namelist),len(namelist), i+j*len(namelist)+1)
+            plt.subplot(len(namelist),len(namelist), i+j*len(namelist)+1)#, figsize=(len(namelist)*3, len(namelist)*3))
             if i == j :
                 plt.hist(df[par1])
                 plt.xlim((parlist[i]['lower_limit'],parlist[i]['upper_limit']))
@@ -312,7 +312,7 @@ def compare_plot(p,filename,nb,datafile,modeltype):
             ss=meq.findss(A,I,pi,modeltype)
             M=np.nanmax(ss[:,:,:,:],axis=2)
             m=np.nanmin(ss[:,:,:,:],axis=2)
-            print(ss)
+          
             
             for ii,i in enumerate(I):
                 axs[ii,0].plot(M[:,ii,0],'g-',linewidth=0.4)
@@ -496,9 +496,9 @@ if __name__ == "__main__":
         
         
         par_plot(pdf,filename,i,meq.parlist,namelist)
-        plot_distribution(p,filename,i,datafile,modeltype)
         compare_plot([p[24],p[499],p[974]],filename,i+"sub",datafile,modeltype)
-        compare_plot(p,filename,i,datafile,modeltype)
+        compare_plot(p,filename,i,datafile,modeltype)      
+        plot_distribution(p,filename,i,datafile,modeltype)
         
 
 
