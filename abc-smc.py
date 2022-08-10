@@ -17,9 +17,9 @@ import shutil
 
 
 
-datatype="_gated"
+datatype="_gated_025IPTG"
 modeltype= "TSLT"   #TSLT TSXLT
-version="FIT009v2_" + modeltype + datatype
+version="FIT009" + modeltype + datatype
 pl=  None
 
 

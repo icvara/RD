@@ -32,7 +32,7 @@ parlist = [
     {'name':'alpha_green', 'lower_limit':1.,'upper_limit':3.},
     {'name':'basal_green', 'lower_limit':2.,'upper_limit':3.},
     {'name':'beta_green', 'lower_limit':1.,'upper_limit':4.},
-    {'name':'K_GREEN', 'lower_limit':0.0,'upper_limit':5.0},
+    {'name':'K_GREEN', 'lower_limit':-2.0,'upper_limit':3.0},
     {'name':'n_GREEN', 'lower_limit':0.,'upper_limit':2.0},
     {'name':'K_ahl_green', 'lower_limit':0.0,'upper_limit':5.0},
     {'name':'n_ahl_green', 'lower_limit':.0,'upper_limit':2.0},
@@ -330,7 +330,7 @@ def Get_data(dataname, st='median'):
     df[df == ' NA'] = np.nan
 
     t=find_between(dataname, '_','.')
-    t=find_between(dataname, '_','_')
+    #t=find_between(dataname, '_','_')
    
 
     if t=="gated":
@@ -405,7 +405,7 @@ def distance(pars,path,modeltype):
     
     d=np.nansum((d_green,d_red,d_red2,d_green2))
     #d=np.nansum((d_green,d_green2))
-    d=np.nansum((d_red,d_red2))
+    #d=np.nansum((d_red,d_red2))
 
     return d
 

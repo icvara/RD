@@ -17,8 +17,8 @@ from functools import partial
 
 
 modeltype="TSLT"
-datatype="_gated"#"_percent"
-filename="FIT009v2_TSLT" +datatype #_percent"
+datatype="_gated_025IPTG"#"_percent"
+filename="FIT009TSLT" +datatype #_percent"
 
 
 data="data"+datatype+".txt"
@@ -27,7 +27,7 @@ datafile = 'data/'+modeltype + '/' +data
 
 
 
-n=['32']#'34','30','25','20','15','10']#['20','15','10','5']#,'20','10']
+n=['11']#'34','30','25','20','15','10']#['20','15','10','5']#,'20','10']
 #n=['100','150','175']
 #n=['15']
 #
