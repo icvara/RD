@@ -385,7 +385,7 @@ def Get_data(dataname, st='median'):
 def distance(pars,path,modeltype):
     
    # GG,GR,GA,RG,RR,RA = model(pars,totaltime, dt)
-    gg,gr,rg,rr=Get_data(path)
+    gg,gr,rr,rg=Get_data(path)
     AHL=gg.index.values
     IPTG=gg.columns.values
     

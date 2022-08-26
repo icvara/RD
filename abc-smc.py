@@ -17,10 +17,10 @@ import shutil
 
 
 
-datatype="_gated_025IPTG"
+datatype="_gated"
 modeltype= "TSLT"   #TSLT TSXLT
-version="FIT009" + modeltype + datatype
-pl=  None
+version="FIT010_" + modeltype + datatype
+pl=  39
 
 
 data="data"+datatype+".txt"
@@ -37,14 +37,16 @@ if os.path.isdir(version) is False: ## if 'smc' folder does not exist:
 path='/users/ibarbier/RD/'
 #path='C:/Users/Administrator/Desktop/Modeling/RD/'
 
-parlist=model.parlist
-
-
-original = path+'model.py'
 target = path + version+ '/model.py'
-shutil.copyfile(original, target)
 
+if os.path.is_file(target) is False:
+  original = path+'model.py'
+  shutil.copyfile(original, target)
 
+sys.path.insert(0, target)
+import model as model
+
+parlist=model.parlist 
 
 
 def pars_to_dict(pars):
